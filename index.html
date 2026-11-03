@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>学習プランナー</title>
+<meta name="theme-color" content="#1C2321">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="学習プランナー">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px)}html,body{margin:0}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@700&display=swap">
+<style>
+/* Layout: fixed header + scrolling work area + bottom tab bar (iPad landscape first, stacks at phone width) */
+:root{
+  --bg:#F4F6F5; --surface:#FFFFFF; --ink:#1C2321; --muted:#56615D; --line:#CFD6D3; --line-soft:#E6EBE9;
+  --accent:#1F5E8C; --accent-ink:#FFFFFF; --warn:#9A4A06; --warn-bg:#FFF4E5; --bad:#B42318; --good:#1A7F37; --good-bg:#EAF6EE;
+  --hatch:rgba(86,97,93,.22); --today:#1C2321; --chip-ink:#FFFFFF;
+  --f-display:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
+  --f-body:"Noto Sans JP","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --nav-h:64px; --head-h:60px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121615; --surface:#1A1F1E; --ink:#E4EAE8; --muted:#9BA7A3; --line:#33403C; --line-soft:#252D2B;
+  --accent:#86B9E2; --accent-ink:#0B1A26; --warn:#F2A65E; --warn-bg:#2E2213; --bad:#F47067; --good:#5BC47E; --good-bg:#15291C;
+  --hatch:rgba(155,167,163,.22); --today:#E4EAE8; --chip-ink:#FFFFFF; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121615; --surface:#1A1F1E; --ink:#E4EAE8; --muted:#9BA7A3; --line:#33403C; --line-soft:#252D2B;
+  --accent:#86B9E2; --accent-ink:#0B1A26; --warn:#F2A65E; --warn-bg:#2E2213; --bad:#F47067; --good:#5BC47E; --good-bg:#15291C;
+  --hatch:rgba(155,167,163,.22); --today:#E4EAE8; --chip-ink:#FFFFFF; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%}
+*{box-sizing:border-box}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#app{height:100%;display:flex;flex-direction:column}
+.head{flex-shrink:0;min-height:var(--head-h);display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--surface)}
+.brand{font-family:var(--f-display);font-size:19px;letter-spacing:.02em}
+.head .sub{color:var(--muted);font-size:14px}
+.head .sp{flex:1}
+.pill{font-size:13px;padding:5px 12px;border:1px solid var(--line);border-radius:999px;white-space:nowrap}
+.pill b{font-size:15px}
+.main{flex:1;min-height:0;overflow:auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.nav{flex-shrink:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--line);background:var(--surface);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.nav button{height:var(--nav-h);border:0;background:transparent;font-size:14px;font-weight:500;color:var(--ink)}
+.nav button[aria-current="page"]{background:var(--ink);color:var(--bg);font-weight:700}
+.btn{min-height:44px;padding:0 16px;border:1px solid var(--line);background:var(--surface);border-radius:8px;font-size:14px;white-space:nowrap}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:var(--bg);font-weight:700}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.sm{min-height:36px;padding:0 12px;font-size:13px}
+.btn.dash{border-style:dashed}
+.btn:disabled{opacity:.45;cursor:default}
+.seg{display:inline-flex;border:1px solid var(--ink);border-radius:8px;overflow:hidden}
+.seg button{min-height:42px;min-width:48px;padding:0 14px;border:0;background:var(--surface);font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:700}
+.seg.sm button{min-height:36px;min-width:40px;padding:0 10px;font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h2,.h2{font-family:var(--f-display);font-size:16px;margin:0}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.row.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:14px}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;color:var(--muted);min-width:0}
+input.in,select.in{min-height:44px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:15px;font-weight:400;color:var(--ink);width:100%;min-width:0}
+input[type=color].in{padding:2px;width:52px}
+.note{padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.6;border:1px solid var(--warn);background:var(--warn-bg);color:var(--warn)}
+.note.bad{border-color:var(--bad);color:var(--bad);background:transparent}
+.note.good{border-color:var(--good);color:var(--good);background:var(--good-bg)}
+.chip{display:inline-flex;align-items:center;justify-content:center;height:24px;padding:0 8px;border-radius:4px;font-size:12px;font-weight:700;color:var(--chip-ink);white-space:nowrap}
+.dot{display:inline-block;width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-size:11.5px;color:var(--muted);text-align:left;font-weight:700;padding:6px 8px;border-bottom:1px solid var(--line)}
+.tbl td{padding:6px 8px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+.tbl-wrap{overflow-x:auto}
+.empty{padding:40px 16px;text-align:center;color:var(--muted)}
+.empty h2{font-family:var(--f-display);color:var(--ink);font-size:20px;margin:0 0 8px}
+
+/* Gantt */
+.g-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.lg-sw{width:20px;height:12px;border-radius:3px;display:inline-block}
+.hatch{background-image:repeating-linear-gradient(45deg,var(--hatch) 0 3px,transparent 3px 7px)}
+.g-scroll{overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface);max-height:calc(100vh - 250px);min-height:260px;position:relative}
+.g-inner{position:relative}
+.g-row{display:flex;border-bottom:1px solid var(--line-soft)}
+.g-lab{position:sticky;left:0;z-index:5;width:230px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:0 10px;min-width:0}
+.g-lab .nm{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.g-lab .mt{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.g-lab .tx{flex:1;min-width:0;text-align:left;border:0;background:transparent;padding:0}
+.g-trk{position:relative;flex-shrink:0}
+.g-head{position:sticky;top:0;z-index:6;background:var(--surface)}
+.g-head .g-lab{z-index:7}
+.g-day{position:absolute;top:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;line-height:1.1;border-right:1px solid var(--line-soft)}
+.g-day.we{background:var(--bg)}
+.g-day.td{background:var(--today);color:var(--bg);font-weight:700}
+.g-mon{position:absolute;top:3px;font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;padding-left:5px;border-left:1px solid var(--line)}
+.bar{position:absolute;top:9px;height:28px;border-radius:4px;overflow:hidden;border:0;padding:0;cursor:pointer}
+.bar .fill{position:absolute;left:0;top:0;bottom:0}
+.bar .lb{position:absolute;left:6px;top:5px;font-size:11px;font-weight:700;white-space:nowrap}
+.bar.over{outline:2px solid var(--bad);outline-offset:-2px}
+.ev{position:absolute;top:11px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;padding:0;border-width:1px;border-style:solid}
+.ov{position:absolute;pointer-events:none;z-index:2}
+.load{position:absolute;bottom:6px;border-radius:2px}
+.lag{font-size:11px;font-weight:700;flex-shrink:0}
+
+/* Today */
+.today-wrap{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.today-wrap{grid-template-columns:minmax(0,1fr)}}
+.big{font-family:var(--f-display);font-size:22px}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper .val{flex:1;text-align:center;font-size:28px;font-weight:700}
+.stepper .val small{font-size:14px;font-weight:500}
+.sq{width:44px;height:44px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:20px}
+.allocbar{display:flex;height:16px;border-radius:4px;overflow:hidden;background:var(--line-soft)}
+.allocbar span{height:100%;border-right:2px solid var(--surface)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:12px}
+.task{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;align-items:center;gap:8px;padding-top:8px;border-top:1px solid var(--line-soft);margin-top:8px}
+.task .k{font-size:12px;font-weight:700;color:var(--muted)}
+.task .mn{font-size:13px;min-width:40px;text-align:right}
+.tog{min-width:68px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:700}
+.tog[aria-pressed="true"]{color:var(--chip-ink)}
+.reach{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);grid-column:2 / -1}
+.reach input{width:84px;min-height:36px}
+
+/* Calendar */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.cal .hd{font-size:11px;color:var(--muted);text-align:center}
+.cal .c{min-height:56px;border:1px solid var(--line-soft);border-radius:6px;padding:3px 4px;background:var(--surface);display:flex;flex-direction:column;gap:2px;text-align:left;min-width:0}
+.cal .c.td{border:2px solid var(--today)}
+.cal .c .n{font-size:11px;font-weight:500}
+.cal .c.off{background:var(--bg)}
+.tag{display:block;padding:1px 4px;border-radius:4px;font-size:10.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1.5px solid;background:var(--surface);text-align:left;width:100%}
+.hcal .c{min-height:44px;align-items:center;justify-content:center;font-size:14px}
+.hcal .c.on{color:var(--bad);font-weight:700;border-color:var(--bad)}
+
+/* Modal + toast */
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+.dlg{background:var(--surface);color:var(--ink);border-radius:12px;width:min(560px,100%);max-height:calc(100% - 32px);overflow:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 18px 50px rgba(0,0,0,.25)}
+.dlg h3{font-family:var(--f-display);font-size:18px;margin:0}
+.dlg .fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.dlg .acts{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;z-index:60;max-width:calc(100% - 32px)}
+.mat-layout{display:grid;grid-template-columns:minmax(0,280px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.mat-layout{grid-template-columns:minmax(0,1fr)}}
+.mlist{display:flex;flex-direction:column;gap:4px}
+.mitem{min-height:52px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);text-align:left;width:100%}
+.mitem[aria-current="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mitem .mt{font-size:11px;opacity:.85}
+.fg3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px}
+.calc{color:var(--accent);font-weight:700}
+#printHead{display:none}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  :root:not([data-theme="_"]):not([data-x]){--bg:#FFFFFF;--surface:#FFFFFF;--ink:#1C2321;--muted:#56615D;--line:#CFD6D3;--line-soft:#E6EBE9;--accent:#1F5E8C;--accent-ink:#FFFFFF;--warn:#9A4A06;--warn-bg:#FFF4E5;--bad:#B42318;--good:#1A7F37;--good-bg:#EAF6EE;--hatch:rgba(86,97,93,.22);--today:#1C2321;color-scheme:light}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body,#app{height:auto!important;display:block!important}
+  #printHead{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #999;padding-bottom:6px;margin-bottom:10px;font-size:14px}
+  .head,.nav,.g-tools,.toast,.btn,.sq,.seg,.reach,#modal{display:none!important}
+  .main{overflow:visible!important;padding:0!important}
+  .g-scroll{overflow:visible!important;max-height:none!important;min-height:0!important;border:0}
+  .no-print{display:none!important}
+  .g-lab,.g-head{position:static!important}
+  .card,.note,tr{break-inside:avoid}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div id="printHead"></div>
+</head>
+<body>
+<div id="app"><div class="empty"><h2>学習プランナー</h2><p>読み込み中です。</p></div></div>
+<div id="modal"></div>
+<input type="file" id="importFile" accept=".json,application/json" hidden>
+
+<script>
+(function(){
+"use strict";
+/* ========== 日付ユーティリティ ========== */
+var WD="日月火水木金土";
+function pad(n){return String(n).padStart(2,"0")}
+function ds(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function pd(s){var a=s.split("-").map(Number);return new Date(a[0],a[1]-1,a[2])}
+function addD(s,n){var d=pd(s);d.setDate(d.getDate()+n);return ds(d)}
+function diffD(a,b){return Math.round((pd(b)-pd(a))/86400000)}
+function dow(s){return pd(s).getDay()}
+function fmt(s){if(!s)return"—";var d=pd(s);return(d.getMonth()+1)+"/"+d.getDate()}
+function fmtW(s){return s?fmt(s)+"（"+WD[dow(s)]+"）":"—"}
+function fmtY(s){if(!s)return"—";var d=pd(s);return d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()}
+function todayS(){return ds(new Date())}
+function monthOf(s){return s.slice(0,7)}
+function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function num(v,def){var n=Number(v);return isFinite(n)&&v!==""&&v!=null?n:def}
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+
+var SAMPLE={"student":{"id":"sample01","name":"サンプル生徒（削除可）","created":"2026-11-04T00:00:00Z","weekMin":[360,180,180,180,180,180,360],"reviewRate":30,"pastLimit":1,"exams":[{"id":"eA","name":"A高校","kind":"第二志望","date":"2027-01-17"},{"id":"eB","name":"B高校","kind":"第一志望","date":"2027-02-01"}],"subjects":[{"id":"jkok","name":"国語","color":"#C2410C","prio":"中"},{"id":"jsug","name":"数学","color":"#1D4ED8","prio":"高"},{"id":"jeng","name":"英語","color":"#7C3AED","prio":"中"},{"id":"jrik","name":"理科","color":"#0F766E","prio":"中"},{"id":"jsha","name":"社会","color":"#A16207","prio":"低"}],"materials":[{"id":"mkok1","subjectId":"jkok","name":"現代文 問題集","examId":"eB","total":240,"startPage":1,"mpp":3,"method":"A","rounds":[{"start":"2026-10-19","end":"2026-11-07","ppd":""},{"start":"2026-11-08","end":"2026-12-06","ppd":""},{"start":"2026-12-07","end":"2027-01-04","ppd":""},{"start":"2027-01-05","end":"2027-01-25","ppd":""}]},{"id":"msug1","subjectId":"jsug","name":"計算ドリル","examId":"eB","total":100,"startPage":1,"mpp":3,"method":"A","rounds":[{"start":"2026-10-19","end":"2026-11-01","ppd":""},{"start":"2026-11-02","end":"2026-11-14","ppd":""},{"start":"2026-11-16","end":"2026-11-29","ppd":""},{"start":"2026-11-30","end":"2026-12-12","ppd":""},{"start":"2026-12-14","end":"2026-12-27","ppd":""}]},{"id":"msug2","subjectId":"jsug","name":"問題集B","examId":"eB","total":300,"startPage":1,"mpp":3,"method":"A","rounds":[{"start":"2026-11-10","end":"2026-12-09","ppd":""},{"start":"2026-12-10","end":"2026-12-31","ppd":""},{"start":"2027-01-01","end":"2027-01-20","ppd":""}]},{"id":"meng1","subjectId":"jeng","name":"英単語帳","examId":"eB","total":200,"startPage":1,"mpp":1,"method":"A","rounds":[{"start":"2026-10-19","end":"2026-11-01","ppd":""},{"start":"2026-11-02","end":"2026-11-14","ppd":""},{"start":"2026-11-16","end":"2026-11-29","ppd":""}]},{"id":"meng2","subjectId":"jeng","name":"長文問題集","examId":"eB","total":180,"startPage":1,"mpp":3,"method":"A","rounds":[{"start":"2026-11-16","end":"2026-12-12","ppd":""},{"start":"2026-12-14","end":"2027-01-05","ppd":""},{"start":"2027-01-06","end":"2027-01-25","ppd":""}]},{"id":"mrik1","subjectId":"jrik","name":"物理 問題集","examId":"eA","total":200,"startPage":1,"mpp":2,"method":"A","rounds":[{"start":"2026-10-19","end":"2026-11-12","ppd":""},{"start":"2026-11-13","end":"2026-12-10","ppd":""},{"start":"2026-12-11","end":"2027-01-10","ppd":""}]},{"id":"msha1","subjectId":"jsha","name":"日本史 一問一答","examId":"eA","total":220,"startPage":1,"mpp":2,"method":"A","rounds":[{"start":"2026-10-19","end":"2026-11-05","ppd":""},{"start":"2026-11-06","end":"2026-12-05","ppd":""},{"start":"2026-12-06","end":"2027-01-10","ppd":""}]}],"holidays":{"2026-11-03":true,"2026-11-23":true},"overrides":{},"mocks":[{"id":"k1","name":"第1回 総合模試","date":"2026-10-18","reviewDate":"2026-10-19","reviewMin":120},{"id":"k2","name":"第2回 総合模試","date":"2026-11-15","reviewDate":"2026-11-16","reviewMin":120},{"id":"k3","name":"第3回 総合模試","date":"2026-12-13","reviewDate":"2026-12-14","reviewMin":120}],"pastSets":[{"id":"q1","examId":"eB","subjectId":"jkok","count":5,"min":50,"reviewMin":30,"start":"","end":""},{"id":"q2","examId":"eB","subjectId":"jsug","count":5,"min":50,"reviewMin":40,"start":"","end":""},{"id":"q3","examId":"eB","subjectId":"jeng","count":5,"min":50,"reviewMin":30,"start":"","end":""},{"id":"q4","examId":"eA","subjectId":"jrik","count":3,"min":40,"reviewMin":20,"start":"","end":""},{"id":"q5","examId":"eA","subjectId":"jsha","count":3,"min":40,"reviewMin":20,"start":"","end":""}],"pastItems":[{"id":"pj45wnh2bdy2","setId":"q1","no":1,"date":"2026-11-07","reviewDate":"2026-11-08","fixed":false,"score":""},{"id":"p6lq6cm4bdy2","setId":"q2","no":1,"date":"2026-11-14","reviewDate":"2026-11-17","fixed":false,"score":""},{"id":"pfgcgc4ybdy2","setId":"q3","no":1,"date":"2026-11-21","reviewDate":"2026-11-22","fixed":false,"score":""},{"id":"pteeoatnbdy3","setId":"q4","no":1,"date":"2026-10-24","reviewDate":"2026-10-25","fixed":false,"score":""},{"id":"pxp2z7o1bdy3","setId":"q5","no":1,"date":"2026-10-31","reviewDate":"2026-11-01","fixed":false,"score":""},{"id":"p50uzf5bbdy3","setId":"q1","no":2,"date":"2026-11-28","reviewDate":"2026-11-29","fixed":false,"score":""},{"id":"pcc0q722bdy4","setId":"q2","no":2,"date":"2026-12-05","reviewDate":"2026-12-06","fixed":false,"score":""},{"id":"p99mxuombdy6","setId":"q3","no":2,"date":"2026-12-07","reviewDate":"2026-12-08","fixed":false,"score":""},{"id":"pmarmagpbdy6","setId":"q4","no":2,"date":"2026-12-19","reviewDate":"2026-12-20","fixed":false,"score":""},{"id":"pb7vzz7jbdy7","setId":"q5","no":2,"date":"2026-11-22","reviewDate":"2026-11-24","fixed":false,"score":""},{"id":"pr4riw1pbdy7","setId":"q1","no":3,"date":"2026-12-26","reviewDate":"2026-12-27","fixed":false,"score":""},{"id":"pgdnqprybdy7","setId":"q2","no":3,"date":"2026-12-28","reviewDate":"2026-12-29","fixed":false,"score":""},{"id":"p2hcuv2nbdy7","setId":"q3","no":3,"date":"2026-12-12","reviewDate":"2026-12-15","fixed":false,"score":""},{"id":"pn9lyk9rbdy7","setId":"q4","no":3,"date":"2027-01-09","reviewDate":"2027-01-10","fixed":false,"score":""},{"id":"pba0qa1qbdy8","setId":"q5","no":3,"date":"2027-01-11","reviewDate":"2027-01-12","fixed":false,"score":""},{"id":"pn590kpxbdy8","setId":"q1","no":4,"date":"2027-01-02","reviewDate":"2027-01-03","fixed":false,"score":""},{"id":"p9ocrx7ubdy8","setId":"q2","no":4,"date":"2027-01-10","reviewDate":"2027-01-11","fixed":false,"score":""},{"id":"pb36d9ejbdy8","setId":"q3","no":4,"date":"2027-01-12","reviewDate":"2027-01-13","fixed":false,"score":""},{"id":"pk34yty8bdy8","setId":"q1","no":5,"date":"2027-01-23","reviewDate":"2027-01-24","fixed":false,"score":""},{"id":"piitl5k8bdy9","setId":"q2","no":5,"date":"2027-01-30","reviewDate":"2027-01-31","fixed":false,"score":""},{"id":"pymkbes3bdy9","setId":"q3","no":5,"date":"2027-01-24","reviewDate":"2027-01-25","fixed":false,"score":""}],"lastExport":null},"logs":{"2026-10":{"recs":{"2026-10-19|mkok1":{"round":0,"from":1,"to":13,"pages":13},"2026-10-20|mkok1":{"round":0,"from":14,"to":26,"pages":13},"2026-10-21|mkok1":{"round":0,"from":27,"to":39,"pages":13},"2026-10-22|mkok1":{"round":0,"from":40,"to":52,"pages":13},"2026-10-23|mkok1":{"round":0,"from":53,"to":65,"pages":13},"2026-10-24|mkok1":{"round":0,"from":66,"to":78,"pages":13},"2026-10-25|mkok1":{"round":0,"from":79,"to":91,"pages":13},"2026-10-26|mkok1":{"round":0,"from":92,"to":104,"pages":13},"2026-10-27|mkok1":{"round":0,"from":105,"to":117,"pages":13},"2026-10-28|mkok1":{"round":0,"from":118,"to":130,"pages":13},"2026-10-29|mkok1":{"round":0,"from":131,"to":143,"pages":13},"2026-10-19|msug1":{"round":0,"from":1,"to":8,"pages":8},"2026-10-20|msug1":{"round":0,"from":9,"to":16,"pages":8},"2026-10-21|msug1":{"round":0,"from":17,"to":23,"pages":7},"2026-10-22|msug1":{"round":0,"from":24,"to":30,"pages":7},"2026-10-23|msug1":{"round":0,"from":31,"to":37,"pages":7},"2026-10-24|msug1":{"round":0,"from":38,"to":44,"pages":7},"2026-10-25|msug1":{"round":0,"from":45,"to":51,"pages":7},"2026-10-26|msug1":{"round":0,"from":52,"to":58,"pages":7},"2026-10-27|msug1":{"round":0,"from":59,"to":65,"pages":7},"2026-10-28|msug1":{"round":0,"from":66,"to":72,"pages":7},"2026-10-29|msug1":{"round":0,"from":73,"to":79,"pages":7},"2026-10-30|msug1":{"round":0,"from":80,"to":86,"pages":7},"2026-10-31|msug1":{"round":0,"from":87,"to":93,"pages":7},"2026-10-19|meng1":{"round":0,"from":1,"to":15,"pages":15},"2026-10-20|meng1":{"round":0,"from":16,"to":30,"pages":15},"2026-10-21|meng1":{"round":0,"from":31,"to":45,"pages":15},"2026-10-22|meng1":{"round":0,"from":46,"to":60,"pages":15},"2026-10-23|meng1":{"round":0,"from":61,"to":74,"pages":14},"2026-10-24|meng1":{"round":0,"from":75,"to":88,"pages":14},"2026-10-25|meng1":{"round":0,"from":89,"to":102,"pages":14},"2026-10-26|meng1":{"round":0,"from":103,"to":116,"pages":14},"2026-10-27|meng1":{"round":0,"from":117,"to":130,"pages":14},"2026-10-28|meng1":{"round":0,"from":131,"to":144,"pages":14},"2026-10-29|meng1":{"round":0,"from":145,"to":158,"pages":14},"2026-10-30|meng1":{"round":0,"from":159,"to":172,"pages":14},"2026-10-31|meng1":{"round":0,"from":173,"to":186,"pages":14},"2026-10-19|mrik1":{"round":0,"from":1,"to":9,"pages":9},"2026-10-20|mrik1":{"round":0,"from":10,"to":18,"pages":9},"2026-10-21|mrik1":{"round":0,"from":19,"to":27,"pages":9},"2026-10-22|mrik1":{"round":0,"from":28,"to":36,"pages":9},"2026-10-23|mrik1":{"round":0,"from":37,"to":45,"pages":9},"2026-10-24|mrik1":{"round":0,"from":46,"to":54,"pages":9},"2026-10-25|mrik1":{"round":0,"from":55,"to":63,"pages":9},"2026-10-26|mrik1":{"round":0,"from":64,"to":72,"pages":9},"2026-10-27|mrik1":{"round":0,"from":73,"to":80,"pages":8},"2026-10-28|mrik1":{"round":0,"from":81,"to":88,"pages":8},"2026-10-29|mrik1":{"round":0,"from":89,"to":96,"pages":8},"2026-10-30|mrik1":{"round":0,"from":97,"to":104,"pages":8},"2026-10-31|mrik1":{"round":0,"from":105,"to":112,"pages":8},"2026-10-19|msha1":{"round":0,"from":1,"to":13,"pages":13},"2026-10-20|msha1":{"round":0,"from":14,"to":26,"pages":13},"2026-10-21|msha1":{"round":0,"from":27,"to":39,"pages":13},"2026-10-22|msha1":{"round":0,"from":40,"to":52,"pages":13},"2026-10-23|msha1":{"round":0,"from":53,"to":65,"pages":13},"2026-10-24|msha1":{"round":0,"from":66,"to":78,"pages":13},"2026-10-25|msha1":{"round":0,"from":79,"to":91,"pages":13},"2026-10-26|msha1":{"round":0,"from":92,"to":104,"pages":13},"2026-10-27|msha1":{"round":0,"from":105,"to":117,"pages":13},"2026-10-28|msha1":{"round":0,"from":118,"to":130,"pages":13},"2026-10-29|msha1":{"round":0,"from":131,"to":143,"pages":13},"2026-10-30|msha1":{"round":0,"from":144,"to":156,"pages":13},"2026-10-31|msha1":{"round":0,"from":157,"to":169,"pages":13}},"checks":{"2026-10-18|mock:k1":true,"2026-10-19|mockrev:k1":true}},"2026-11":{"recs":{"2026-11-01|mkok1":{"round":0,"from":144,"to":160,"pages":17},"2026-11-02|mkok1":{"round":0,"from":161,"to":176,"pages":16},"2026-11-01|msug1":{"round":0,"from":94,"to":100,"pages":7},"2026-11-02|msug1":{"round":1,"from":1,"to":9,"pages":9},"2026-11-01|meng1":{"round":0,"from":187,"to":200,"pages":14},"2026-11-02|meng1":{"round":1,"from":1,"to":17,"pages":17},"2026-11-01|mrik1":{"round":0,"from":113,"to":120,"pages":8},"2026-11-02|mrik1":{"round":0,"from":121,"to":128,"pages":8},"2026-11-01|msha1":{"round":0,"from":170,"to":182,"pages":13},"2026-11-02|msha1":{"round":0,"from":183,"to":195,"pages":13}},"checks":{}}}};
+var PALETTE=["#C2410C","#1D4ED8","#7C3AED","#0F766E","#A16207","#BE185D","#4D7C0F","#0369A1","#9F1239","#475569"];
+var PRIO={"高":1.5,"中":1,"低":0.5};
+
+/* ========== 状態 ========== */
+var S={students:{},logs:{},sid:lsGet("gp-sid"),tab:lsGet("gp-tab")||"gantt",view:"day",date:todayS(),
+  matSel:null,draft:null,calMonth:monthOf(todayS()),holMonth:monthOf(todayS()),mode:"loading",dl:null,toast:"",ganttScroll:null};
+
+function stu(){return S.students[S.sid]||null}
+function subjById(st,id){return st.subjects.find(function(x){return x.id===id})}
+function examById(st,id){return st.exams.find(function(x){return x.id===id})}
+function sortedSubjects(st){return st.subjects.slice()}
+function nextExam(st){var t=todayS();return st.exams.filter(function(e){return e.date>=t}).sort(function(a,b){return a.date<b.date?-1:1})[0]}
+function targetExam(st,m){return examById(st,m.examId)||st.exams.slice().sort(function(a,b){return a.date<b.date?-1:1})[0]}
+
+/* ========== 保存層（db capability / 端末内フォールバック） ========== */
+var IDB={db:null,
+  open:function(){return new Promise(function(res){try{var r=indexedDB.open("study-planner",1);r.onupgradeneeded=function(){r.result.createObjectStore("kv")};r.onsuccess=function(){IDB.db=r.result;res(true)};r.onerror=function(){res(false)};r.onblocked=function(){res(false)}}catch(e){res(false)}})},
+  get:function(k){return new Promise(function(res){if(!IDB.db)return res(null);try{var q=IDB.db.transaction("kv").objectStore("kv").get(k);q.onsuccess=function(){res(q.result||null)};q.onerror=function(){res(null)}}catch(e){res(null)}})},
+  put:function(k,v){if(!IDB.db)return;try{IDB.db.transaction("kv","readwrite").objectStore("kv").put(JSON.parse(JSON.stringify(v)),k)}catch(e){}}};
+var Store={db:null,unsubS:null,unsubL:null,
+  init:function(){
+    S.dl={save:function(o){return new Promise(function(res,rej){try{var b=new Blob([o.data],{type:/\.json$/.test(o.filename)?"application/json":"text/plain"});var u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=o.filename.replace(/[\\/:*?"<>|\s（）()]+/g,"_");document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(u);a.remove()},1500);res()}catch(e){rej({code:"unavailable"})}})}};
+    this.local();
+  },
+  local:function(){
+    S.mode="loading";
+    try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+    IDB.open().then(function(){return IDB.get("data")}).then(function(o){
+      if(!o){try{var raw=lsGet("gp-local");if(raw)o=JSON.parse(raw)}catch(e){}}
+      if(o){S.students=o.students||{};S.logs=o.logs||{}}
+      Object.keys(S.students).forEach(function(k){normalize(S.students[k])});
+      if(!S.students[S.sid])S.sid=orderedIds()[0]||null;
+      S.mode="local";render();
+    });
+  },
+  persistLocal:function(){var self=this;clearTimeout(self.t);self.t=setTimeout(function(){var o={students:S.students,logs:S.logs};IDB.put("data",o);lsSet("gp-local",JSON.stringify(o))},250)},
+  fail:function(e){toast("保存先に接続できません（"+(e&&e.code||"unavailable")+"）。再読み込みしてください。")},
+  watchLogs:function(){
+    var self=this;if(!self.db)return;
+    if(self.watching===S.sid)return;
+    if(self.unsubL)self.unsubL();
+    self.watching=S.sid;if(!S.sid)return;
+    var sid=S.sid;
+    self.unsubL=self.db.collection("logs").where("sid","==",sid).onSnapshot(function(snap){
+      var m={};snap.docs.forEach(function(d){if(d.exists){var x=d.data();m[x.month]={recs:clone(x.recs||{}),checks:clone(x.checks||{})}}});
+      S.logs[sid]=m;render();
+    },function(e){self.fail(e)});
+  },
+  saveStudent:function(st){
+    S.students[st.id]=st;
+    if(this.db){this.db.collection("students").doc(st.id).set(clone(st)).catch(function(e){Store.writeErr(e)})}
+    else this.persistLocal();
+  },
+  deleteStudent:function(id){
+    var logs=S.logs[id]||{};delete S.students[id];delete S.logs[id];
+    if(this.db){var db=this.db;db.collection("students").doc(id).delete().catch(function(e){Store.writeErr(e)});
+      Object.keys(logs).forEach(function(mo){db.collection("logs").doc(id+"_"+mo).delete().catch(function(){})})}
+    else this.persistLocal();
+  },
+  patchLog:function(sid,date,field,key,val){
+    var mo=monthOf(date);S.logs[sid]=S.logs[sid]||{};
+    var exists=!!S.logs[sid][mo];
+    var L=S.logs[sid][mo]||(S.logs[sid][mo]={recs:{},checks:{}});
+    L[field][key]=val;
+    if(this.db){
+      var ref=this.db.collection("logs").doc(sid+"_"+mo);
+      var p={};p[field]={};p[field][key]=val;
+      var w=exists?ref.update(p):ref.set({sid:sid,month:mo,recs:clone(L.recs),checks:clone(L.checks)});
+      w.catch(function(e){ if(exists&&e&&e.code==="invalid_argument"){ref.set({sid:sid,month:mo,recs:clone(L.recs),checks:clone(L.checks)}).catch(function(e2){Store.writeErr(e2)})} else Store.writeErr(e)});
+    } else this.persistLocal();
+  },
+  putMonth:function(sid,mo,L){
+    S.logs[sid]=S.logs[sid]||{};S.logs[sid][mo]=L;
+    if(this.db)this.db.collection("logs").doc(sid+"_"+mo).set({sid:sid,month:mo,recs:L.recs||{},checks:L.checks||{}}).catch(function(e){Store.writeErr(e)});
+    else this.persistLocal();
+  },
+  writeErr:function(e){var c=e&&e.code;toast(c==="quota_exceeded"?"保存容量の上限に達しました。古い生徒データを削除してください。":"保存に失敗しました。通信状態を確認して、もう一度操作してください。")}
+};
+function orderedIds(){return Object.keys(S.students).sort(function(a,b){var x=S.students[a],y=S.students[b];return(x.created||"")<(y.created||"")?-1:1})}
+function normalize(st){
+  st.exams=st.exams||[];st.subjects=st.subjects||[];st.materials=st.materials||[];st.holidays=st.holidays||{};st.overrides=st.overrides||{};
+  st.mocks=st.mocks||[];st.pastSets=st.pastSets||[];st.pastItems=st.pastItems||[];
+  st.weekMin=st.weekMin&&st.weekMin.length===7?st.weekMin:[300,120,120,120,120,120,300];
+  if(st.reviewRate==null)st.reviewRate=30;if(st.pastLimit==null)st.pastLimit=1;
+  st.materials.forEach(function(m){m.rounds=m.rounds||[];if(!m.startPage)m.startPage=1;if(!m.mpp)m.mpp=2;if(!m.method)m.method="A"});
+}
+function save(st){Store.saveStudent(st);render()}
+function newStudent(name){
+  var st={id:"s"+uid(),name:name,created:new Date().toISOString(),weekMin:[300,120,120,120,120,120,300],reviewRate:30,pastLimit:1,
+    exams:[],subjects:["国語","数学","英語","理科","社会"].map(function(n,i){return{id:"j"+uid(),name:n,color:PALETTE[i],prio:"中"}}),
+    materials:[],holidays:{},overrides:{},mocks:[],pastSets:[],pastItems:[],lastExport:null};
+  return st;
+}
+
+/* ========== 計算ロジック ========== */
+var memo={};
+function resetMemo(){memo={rc:{},rec:null,study:{}}}
+function isMockDay(st,d){return st.mocks.some(function(m){return m.date===d})}
+function isMockRev(st,d){return st.mocks.some(function(m){return m.reviewDate===d})}
+function isStudy(st,d){
+  var k=d;if(memo.study[k]!=null)return memo.study[k];
+  var r=st.weekMin[dow(d)]>0&&!st.holidays[d]&&!isMockDay(st,d);memo.study[k]=r;return r;
+}
+function availMin(st,d){if(st.holidays[d]||isMockDay(st,d))return 0;var o=st.overrides[d];return o!=null?o:st.weekMin[dow(d)]}
+function countStudy(st,a,b){if(!a||!b||b<a)return 0;var n=0,d=a,g=0;while(d<=b&&g<1500){if(isStudy(st,d))n++;d=addD(d,1);g++}return n}
+function nthStudy(st,start,n){var d=start,c=0,g=0;while(g<1500){if(isStudy(st,d)){c++;if(c>=n)return d}d=addD(d,1);g++}return d}
+function prevStudy(st,d){var x=addD(d,-1),g=0;while(g<90){if(isStudy(st,x))return x;x=addD(x,-1);g++}return null}
+function nextStudy(st,d,avoid){var x=addD(d,1),g=0;while(g<120){if(isStudy(st,x)&&!(avoid&&avoid(x)))return x;x=addD(x,1);g++}return null}
+function roundCalc(st,m,i){
+  var key=m.id+":"+i;if(memo.rc[key])return memo.rc[key];
+  var r=m.rounds[i]||{},tot=Math.max(1,num(m.total,1)),res={start:r.start||null,end:null,ppd:0,days:0,ok:false};
+  if(r.start){
+    if(m.method==="B"){var p=Math.max(1,num(r.ppd,1));res.ppd=p;res.days=Math.ceil(tot/p);res.end=nthStudy(st,r.start,res.days);res.ok=true}
+    else if(r.end&&r.end>=r.start){res.end=r.end;res.days=countStudy(st,r.start,r.end);res.ppd=res.days?Math.ceil(tot/res.days):tot;res.ok=res.days>0}
+  }
+  memo.rc[key]=res;return res;
+}
+function mppOf(m,i){var r=m.rounds[i],v=r?num(r.mpp,NaN):NaN;return isFinite(v)&&v>0?v:Math.max(.1,num(m.mpp,1))}
+function recIndex(){
+  if(memo.rec)return memo.rec;var idx={};var L=S.logs[S.sid]||{};
+  Object.keys(L).forEach(function(mo){var R=L[mo].recs||{};Object.keys(R).forEach(function(k){var v=R[k];if(!v)return;var p=k.split("|");(idx[p[1]]=idx[p[1]]||[]).push({date:p[0],round:v.round,from:v.from,to:v.to,pages:v.pages,min:v.min})})});
+  memo.rec=idx;return idx;
+}
+function getRec(d,mid){var L=(S.logs[S.sid]||{})[monthOf(d)];return L&&L.recs?L.recs[d+"|"+mid]||null:null}
+function getCheck(d,key){var L=(S.logs[S.sid]||{})[monthOf(d)];return!!(L&&L.checks&&L.checks[d+"|"+key])}
+function doneIn(m,i,before,extra){var a=recIndex()[m.id]||[],s=0;a.forEach(function(r){if(r.round===i&&(!before||r.date<before))s+=num(r.pages,0)});return s+(extra&&extra[i]||0)}
+function curRound(m,before,extra){var t=num(m.total,0);for(var i=0;i<m.rounds.length;i++){if(doneIn(m,i,before,extra)<t)return i}return-1}
+function expectedAt(st,m,i,x){var rc=roundCalc(st,m,i);if(!rc.ok||x<rc.start)return 0;return Math.floor(num(m.total,0)*countStudy(st,rc.start,x<rc.end?x:rc.end)/Math.max(1,rc.days))}
+function planNew(st,m,d,extra){
+  if(!isStudy(st,d))return null;var i=curRound(m,d,extra);if(i<0)return null;var rc=roundCalc(st,m,i);if(!rc.ok||d<rc.start)return null;
+  var done=doneIn(m,i,d,extra),rem=num(m.total,0)-done;if(rem<=0)return null;
+  var p=d<=rc.end?Math.ceil(rem/Math.max(1,countStudy(st,d,rc.end))):rc.ppd;
+  var cu=m.catchUp;if(cu&&cu.round===i&&d<=cu.until&&d<=rc.end){var need=expectedAt(st,m,i,cu.until)-done;if(need>0)p=Math.max(p,Math.ceil(need/Math.max(1,countStudy(st,d,cu.until))))}
+  p=Math.min(p,rem);
+  var from=num(m.startPage,1)+done;return{round:i,pages:p,from:from,to:from+p-1,min:p*mppOf(m,i),overdue:d>rc.end,catchUp:!!(cu&&cu.round===i&&d<=cu.until)};
+}
+function reviewOf(st,m,d){
+  var p=prevStudy(st,d);if(!p)return null;var r=getRec(p,m.id);if(!r||!r.pages)return null;
+  return{date:p,from:r.from,to:r.to,pages:r.pages,min:Math.round(r.pages*mppOf(m,r.round)*st.reviewRate/100)};
+}
+function pastSetOf(st,id){return st.pastSets.find(function(x){return x.id===id})}
+function fixedOf(st,d){
+  var out=[];
+  st.mocks.forEach(function(m){if(m.date===d)out.push({key:"mock:"+m.id,kind:"模試",label:m.name,min:0,color:null});
+    if(m.reviewDate===d)out.push({key:"mockrev:"+m.id,kind:"模試復習",label:m.name+" の復習",min:num(m.reviewMin,120),color:null})});
+  st.pastItems.forEach(function(it){var ps=pastSetOf(st,it.setId);if(!ps)return;var sj=subjById(st,ps.subjectId),ex=examById(st,ps.examId);
+    var nm=(ex?ex.name+" ":"")+(sj?sj.name:"")+" 過去問 第"+it.no+"回";
+    if(it.date===d)out.push({key:"past:"+it.id,kind:"過去問",label:nm,min:num(ps.min,50),color:sj&&sj.color,item:it});
+    if(it.reviewDate===d)out.push({key:"pastrev:"+it.id,kind:"過去問復習",label:nm+" の復習",min:num(ps.reviewMin,30),color:sj&&sj.color,item:it})});
+  return out;
+}
+function dayPlan(st,d){
+  var avail=availMin(st,d),fixed=fixedOf(st,d),mockDay=isMockDay(st,d);
+  var fixedMin=fixed.reduce(function(a,f){return a+f.min},0);
+  var subs=st.subjects.map(function(sj){
+    var items=st.materials.filter(function(m){return m.subjectId===sj.id}).map(function(m){
+      var pl=mockDay?null:planNew(st,m,d),rv=mockDay?null:reviewOf(st,m,d);
+      return{m:m,plan:pl,rev:rv,need:pl?pl.min:0}}).filter(function(x){return x.plan||x.rev||getRec(d,x.m.id)});
+    var need=items.reduce(function(a,x){return a+x.need},0),rev=items.reduce(function(a,x){return a+(x.rev?x.rev.min:0)},0);
+    return{sj:sj,items:items,need:need,rev:rev,alloc:need};
+  }).filter(function(s){return s.items.length});
+  var revTotal=subs.reduce(function(a,s){return a+s.rev},0),needTotal=subs.reduce(function(a,s){return a+s.need},0);
+  var T=Math.max(0,avail-fixedMin-revTotal),adjusted=needTotal>T;
+  if(adjusted){
+    var act=subs.filter(function(s){return s.need>0}),rem=T,g=0;
+    subs.forEach(function(s){s.alloc=0});
+    while(act.length&&g<20){g++;
+      var ws=act.reduce(function(a,s){return a+s.need*PRIO[s.sj.prio||"中"]},0);if(ws<=0)break;
+      var capped=act.filter(function(s){return rem*s.need*PRIO[s.sj.prio||"中"]/ws>=s.need});
+      if(!capped.length){act.forEach(function(s){s.alloc=rem*s.need*PRIO[s.sj.prio||"中"]/ws});break}
+      capped.forEach(function(s){s.alloc=s.need;rem-=s.need});act=act.filter(function(s){return capped.indexOf(s)<0});
+    }
+  }
+  var newUsed=0,cut=0,cutMin=0;
+  subs.forEach(function(s){
+    s.items.forEach(function(x){
+      if(!x.plan){x.pages=0;x.min=0;return}
+      var a=s.need?s.alloc*x.need/s.need:0,mpp=mppOf(x.m,x.plan.round);
+      x.pages=adjusted?Math.min(x.plan.pages,Math.floor(a/mpp+1e-9)):x.plan.pages;
+      x.min=Math.round(x.pages*mpp);x.from=x.plan.from;x.to=x.plan.from+x.pages-1;
+      cut+=x.plan.pages-x.pages;cutMin+=x.plan.min-x.pages*mpp;newUsed+=x.min;
+    });
+    s.total=s.rev+s.items.reduce(function(a,x){return a+(x.min||0)},0);
+  });
+  return{avail:avail,fixed:fixed,fixedMin:fixedMin,mockDay:mockDay,subs:subs,revTotal:revTotal,needTotal:needTotal,adjusted:adjusted,
+    T:T,newUsed:newUsed,cut:cut,cutMin:Math.round(cutMin),used:fixedMin+revTotal+newUsed};
+}
+function lagOf(st,m){
+  var t=todayS(),y=addD(t,-1),i=curRound(m,t);if(i<0)return{done:true};var rc=roundCalc(st,m,i);if(!rc.ok||y<rc.start)return{lag:0,i:i};
+  var planned=Math.floor(num(m.total,0)*countStudy(st,rc.start,y<rc.end?y:rc.end)/Math.max(1,rc.days));return{lag:planned-doneIn(m,i,t),i:i};
+}
+function plannedLoad(st,d,exclude){
+  if(!isStudy(st,d))return fixedOf(st,d).reduce(function(a,f){return a+f.min},0);
+  var sum=0;st.materials.forEach(function(m){if(m.id===exclude)return;for(var i=0;i<m.rounds.length;i++){var rc=roundCalc(st,m,i);if(rc.ok&&d>=rc.start&&d<=rc.end){sum+=rc.ppd*mppOf(m,i)*(1+st.reviewRate/100);break}}});
+  return Math.round(sum+fixedOf(st,d).reduce(function(a,f){return a+f.min},0));
+}
+
+/* 遅れ調整：選択肢ごとに計画を複製してシミュレーションし、比較する */
+function actualMpp(m){var a=(recIndex()[m.id]||[]).filter(function(r){return num(r.min,0)>0&&num(r.pages,0)>0}).sort(function(x,y){return x.date<y.date?1:-1}).slice(0,20);
+  if(!a.length)return null;var mn=a.reduce(function(s,r){return s+num(r.min,0)},0),pg=a.reduce(function(s,r){return s+num(r.pages,0)},0);return{mpp:Math.round(mn/pg*10)/10,n:a.length}}
+function studyDays(st,a,b){var out=[],d=a,g=0;while(d<=b&&g<1500){if(isStudy(st,d))out.push(d);d=addD(d,1);g++}return out}
+function resplit(st,m,from,to,idxs){resetMemo();var days=studyDays(st,from,to),n=idxs.length;if(!n)return true;if(days.length<n)return false;
+  idxs.forEach(function(ri,k){var a=Math.floor(days.length*k/n),b=Math.floor(days.length*(k+1)/n)-1,r=m.rounds[ri];r.start=days[a];
+    if(m.method==="B")r.ppd=Math.ceil(num(m.total,1)/(b-a+1));else r.end=days[b]});resetMemo();return true}
+function setRoundEnd(st,m,i,end){var r=m.rounds[i];resetMemo();if(m.method==="B")r.ppd=Math.ceil(num(m.total,1)/Math.max(1,countStudy(st,r.start,end)));else r.end=end;resetMemo()}
+function simulate(st,mid){
+  resetMemo();var m=st.materials.find(function(x){return x.id===mid});if(!m)return null;var t=todayS(),i0=curRound(m,t);if(i0<0)return null;
+  var extra={},d=getRec(t,m.id)?addD(t,1):t,g=0,days=[],roundDone=null,finalDone=null,tot=num(m.total,0);
+  while(g<500){var p=planNew(st,m,d,extra);
+    if(p){extra[p.round]=(extra[p.round]||0)+p.pages;days.push({d:d,pages:p.pages,min:p.pages*mppOf(m,p.round)});
+      if(!roundDone&&doneIn(m,i0,t,extra)>=tot)roundDone=d;
+      if(curRound(m,addD(d,1),extra)<0){finalDone=d;break}}
+    d=addD(d,1);g++}
+  var ex=targetExam(st,m),endP=roundDone||addD(t,90),over=0,rate=1+st.reviewRate/100;
+  days.forEach(function(x){if(x.d>endP)return;var tl=plannedLoad(st,x.d,m.id)+x.min*rate;if(tl>availMin(st,x.d))over++});
+  var n7=days.slice(0,7),tp=dayPlan(st,t),it=null;tp.subs.forEach(function(s){s.items.forEach(function(x){if(x.m.id===mid)it=x})});
+  return{i0:i0,avg7:n7.length?Math.round(n7.reduce(function(a,x){return a+x.pages},0)/n7.length*10)/10:0,max7:n7.reduce(function(a,x){return Math.max(a,x.pages)},0),
+    maxMin:Math.round(days.slice(0,30).reduce(function(a,x){return Math.max(a,x.min)},0)),roundDone:roundDone,finalDone:finalDone,
+    gap:ex&&finalDone?diffD(finalDone,ex.date)-1:null,ex:ex,left:m.rounds.length-i0,total:m.rounds.length,over:over,
+    today:it&&it.plan?{pages:it.pages,min:it.min,plan:it.plan.pages}:null};
+}
+function studyHol(st,a,b){return Object.keys(st.holidays).filter(function(h){return st.holidays[h]&&h>=a&&h<=b}).length}
+function adjOptions(st,m){
+  resetMemo();var t=todayS(),i=curRound(m,t),rc=roundCalc(st,m,i),n=m.rounds.length,last=roundCalc(st,m,n-1),P=S.adjP,rem=num(m.total,0)-doneIn(m,i,t);
+  var mk=function(fn){var s2=clone(st);normalize(s2);var m2=s2.materials.find(function(x){return x.id===m.id});resetMemo();var err=fn(s2,m2);return err?{err:err}:{st:s2}};
+  var O=[];
+  O.push({k:"level",t:"1日の負荷を上げる（平準化）",d:"遅れを周回終了日までの残り学習日に均等に上乗せします（標準の動作）。",p:"",b:function(){return mk(function(s2,m2){delete m2.catchUp})}});
+  O.push({k:"early",t:"1日の負荷を上げる（早期解消）",d:"指定した学習日数のうちに計画どおりの進度へ戻し、その後は通常のペースに戻します。",
+    p:'<label class="f">解消までの学習日数<input class="in" type="number" inputmode="numeric" min="1" max="60" data-adj="k" value="'+esc(P.k)+'" style="max-width:120px"></label>',
+    b:function(){return mk(function(s2,m2){m2.catchUp={round:i,until:nthStudy(s2,t,Math.max(1,num(P.k,7)))}})}});
+  var maxCut=n-1-i;
+  O.push({k:"cut",t:"実施回数を減らす",d:"最後の周回から減らし、残る周回に元の最終終了日までの期間を割り振り直します。",
+    p:maxCut>0?'<label class="f">減らす周回数<select class="in" data-adj="cut">'+Array.from({length:maxCut},function(_,j){return'<option value="'+(j+1)+'"'+(+P.cut===j+1?" selected":"")+'>'+(j+1)+'周（全'+(n-j-1)+'周に）</option>'}).join("")+'</select></label>':"",
+    b:function(){if(maxCut<1)return{err:"現在の周回より後の周回がありません。"};return mk(function(s2,m2){var c=Math.min(maxCut,Math.max(1,num(P.cut,1)));m2.rounds=m2.rounds.slice(0,n-c);resetMemo();
+      var idx=[];for(var j=i+1;j<m2.rounds.length;j++)idx.push(j);
+      if(!idx.length){setRoundEnd(s2,m2,i,last.end);return""}
+      var cur=roundCalc(s2,m2,i);if(!resplit(s2,m2,nextStudy(s2,cur.end),last.end,idx))return"残る周回に割り振る学習日が足りません。"})}});
+  var defEnd=P.newEnd||(rc.ok&&rc.ppd?nthStudy(st,t,Math.ceil(rem/rc.ppd)):"");
+  O.push({k:"extend",t:"期限を延ばす（後続の周回を圧縮）",d:"現在の周回の終了日を延ばし、最終周回の終了日は変えずに後続の周回を短くします。",
+    p:'<label class="f">現在の周回の新しい終了日<input class="in" type="date" data-adj="newEnd" value="'+esc(defEnd)+'" style="max-width:200px"></label>',
+    b:function(){if(!defEnd)return{err:"終了日を入力してください。"};if(defEnd<=rc.end)return{err:"現在の終了日（"+fmt(rc.end)+"）より後の日付を入力してください。"};
+      var idx=[];for(var j=i+1;j<n;j++)idx.push(j);if(idx.length&&defEnd>=last.end)return{err:"最終周回の終了日（"+fmt(last.end)+"）より前の日付を入力してください。"};
+      return mk(function(s2,m2){setRoundEnd(s2,m2,i,defEnd);if(!idx.length)return"";if(!resplit(s2,m2,nextStudy(s2,defEnd),last.end,idx))return"後続の周回に割り振る学習日が足りません。"})}});
+  O.push({k:"time",t:"学習時間を増やす",d:"現在の周回の終了日（"+fmt(rc.end)+"）までの学習日について、学習可能時間を増やします。必要に応じて休止日を解除します。",
+    p:'<div class="row"><label class="f">1日あたりの追加時間（分）<input class="in" type="number" inputmode="numeric" min="0" step="10" data-adj="plus" value="'+esc(P.plus)+'" style="max-width:120px"></label>'+
+      '<label class="row small" style="gap:6px;margin-top:18px"><input type="checkbox" data-adj="unhol"'+(P.unhol?" checked":"")+' style="width:22px;height:22px"> 期間中の休止日を解除（'+studyHol(st,t,rc.end)+'日）</label></div>',
+    b:function(){return mk(function(s2){if(P.unhol)Object.keys(s2.holidays).forEach(function(h){if(h>=t&&h<=rc.end)delete s2.holidays[h]});resetMemo();
+      studyDays(s2,t,rc.end).forEach(function(d){s2.overrides[d]=availMin(s2,d)+Math.max(0,num(P.plus,0))});resetMemo()})}});
+  var others=st.subjects.filter(function(x){return x.id!==m.subjectId}),low=P.low||(others[0]&&others[0].id);
+  O.push({k:"prio",t:"他の科目から時間を回す",d:"この科目の優先度を「高」、選んだ科目の優先度を「低」にします。時間が足りない日の配分が変わります。",
+    p:others.length?'<label class="f">時間を回す元の科目<select class="in" data-adj="low">'+others.map(function(x){return'<option value="'+x.id+'"'+(x.id===low?" selected":"")+'>'+esc(x.name)+'（現在 '+esc(x.prio||"中")+'）</option>'}).join("")+'</select></label>':"",
+    b:function(){if(!others.length)return{err:"他の科目がありません。"};return mk(function(s2,m2){subjById(s2,m2.subjectId).prio="高";var l=subjById(s2,low);if(l)l.prio="低"})}});
+  var sets=st.pastSets.filter(function(x){return num(x.count,0)>0}),ps=P.pset||(sets[0]&&sets[0].id),inP=st.pastItems.filter(function(x){return x.date&&x.date>=t&&x.date<=rc.end}).length;
+  O.push({k:"past",t:"過去問を減らす",d:"選んだ過去問の回数を減らし、自動配置をやり直します。現在の周回の期間中の過去問は"+inP+"回です。",
+    p:sets.length?'<div class="row"><label class="f">過去問<select class="in" data-adj="pset">'+sets.map(function(x){var sj=subjById(st,x.subjectId),e=examById(st,x.examId);return'<option value="'+x.id+'"'+(x.id===ps?" selected":"")+'>'+esc((sj?sj.name:"")+"・"+(e?e.name:"")+"（"+x.count+"回）")+'</option>'}).join("")+'</select></label>'+
+      '<label class="f">減らす回数<input class="in" type="number" inputmode="numeric" min="1" data-adj="pcut" value="'+esc(P.pcut)+'" style="max-width:100px"></label></div>':"",
+    b:function(){if(!sets.length)return{err:"過去問が設定されていません。"};return mk(function(s2){var x=pastSetOf(s2,ps);x.count=Math.max(0,num(x.count,0)-Math.max(1,num(P.pcut,1)));resetMemo();autoPlace(s2);resetMemo()})}});
+  var am=actualMpp(m);
+  O.push({k:"mpp",t:"1ページの所要時間を見直す",d:am?"記録した実施時間（直近"+am.n+"件）から、1ページ "+am.mpp+"分と算出しました。現在の周回（"+mppOf(m,i)+"分）以降に反映します。":"今日の計画で実施時間を記録すると、実績から算出できます。",p:"",
+    b:function(){if(!am)return{err:"実施時間の記録がありません。"};return mk(function(s2,m2){for(var j=i;j<m2.rounds.length;j++)m2.rounds[j].mpp=am.mpp})}});
+  return O;
+}
+function viewAdjust(st){
+  var m=st.materials.find(function(x){return x.id===S.adj});if(!m){S.adj=null;return viewMats(st)}
+  var sj=subjById(st,m.subjectId),t=todayS();resetMemo();var i=curRound(m,t);
+  var back='<div class="row between" style="margin-bottom:12px"><div class="row"><span class="chip" style="background:'+esc(sj?sj.color:"#666")+'">'+esc(sj?sj.name:"")+'</span><span class="h2" style="font-size:19px">'+esc(m.name)+' の遅れ調整</span></div><button class="btn" data-act="adjClose">閉じる</button></div>';
+  if(i<0)return back+'<div class="card empty"><p>すべての周回が完了しています。</p></div>';
+  var rc=roundCalc(st,m,i),lg=lagOf(st,m),rem=num(m.total,0)-doneIn(m,i,t),left=countStudy(st,t,rc.end);
+  var sum='<div class="card" style="margin-bottom:14px"><div class="fg3">'+
+    [["現在の周回",(i+1)+"周目（全"+m.rounds.length+"周）"],["期間",fmt(rc.start)+"〜"+fmt(rc.end)],["遅れ",lg.lag>0?lg.lag+"ページ":"なし"],["残りページ",rem+"ページ"],["残り学習日",left+"日"],["当初の1日ページ数",rc.ppd+"ページ"]]
+    .map(function(x){return'<div><div class="small muted" style="font-weight:700">'+x[0]+'</div><div style="font-size:17px;font-weight:700'+(x[0]==="遅れ"&&lg.lag>0?";color:var(--bad)":"")+'">'+x[1]+'</div></div>'}).join("")+'</div></div>';
+  var O=adjOptions(st,m),rows=O.map(function(o){var r=o.b(),x=r.st?simulate(r.st,m.id):null;
+    var cells=r.err?'<td colspan="7" class="small" style="color:var(--bad)">'+esc(r.err)+'</td>':(!x?'<td colspan="7" class="small muted">算出できません。</td>':
+      '<td>'+x.avg7+'<span class="small muted">／最大'+x.max7+'</span></td><td>'+x.maxMin+'分</td><td>'+fmtW(x.roundDone)+'</td>'+
+      '<td>'+(x.finalDone?fmtW(x.finalDone):"—")+(x.gap!=null?'<div class="small" style="color:'+(x.gap<0?"var(--bad)":"var(--good)")+';font-weight:700">'+(x.gap<0?"受験日超過":"余裕"+x.gap+"日")+'</div>':'')+'</td>'+
+      '<td>'+x.left+'周<span class="small muted">／全'+x.total+'周</span></td><td style="font-weight:700;color:'+(x.over?"var(--bad)":"var(--good)")+'">'+x.over+'日</td>'+
+      '<td>'+(x.today?x.today.pages+'p<span class="small muted">／計画'+x.today.plan+'p</span>':"—")+'</td>');
+    return'<tr><td style="min-width:260px"><div style="font-weight:700">'+o.t+'</div><div class="small muted" style="margin:2px 0 6px">'+o.d+'</div>'+o.p+'</td>'+cells+
+      '<td>'+(r.st?'<button class="btn sm pri" data-act="adjApply" data-k="'+o.k+'">反映</button>':'')+'</td></tr>'});
+  S.adjCache=O;resetMemo();
+  return back+sum+'<div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>方法と条件</th><th>次の7学習日<br>（p/日 平均）</th><th>1日の所要<br>（最大）</th><th>現周回の完了</th><th>最終周回の完了</th><th>周回数</th><th>標準超過日<br>（現周回完了まで）</th><th>今日の配分</th><th></th></tr></thead><tbody>'+rows.join("")+'</tbody></table></div>'+
+    '<p class="small muted" style="margin:8px 0 0">各欄は、その方法を反映した場合の見込みです。「標準超過日」は、この教材を含む1日の所要時間が学習可能時間を超える日数です。「今日の配分」は、時間が足りない日の優先度配分を反映したページ数です。</p></div>';
+}
+function actualLoad(st,d){var sum=0;st.materials.forEach(function(m){var r=getRec(d,m.id);if(r)sum+=num(r.pages,0)*mppOf(m,r.round)});return Math.round(sum)}
+
+/* 過去問の自動配置 */
+function autoPlace(st){
+  var used={},wk={};
+  var blocked=function(d){return!isStudy(st,d)||isMockRev(st,d)};
+  var weekKey=function(d){return addD(d,-((dow(d)+6)%7))};
+  st.pastItems.forEach(function(it){if(it.fixed&&it.date){used[it.date]=(used[it.date]||0)+1;var w=weekKey(it.date);wk[w]=(wk[w]||0)+1}});
+  var sets=st.pastSets.slice().sort(function(a,b){return num(b.count,0)-num(a.count,0)});
+  var keep=st.pastItems.filter(function(it){return it.fixed&&sets.some(function(s){return s.id===it.setId})});
+  var plan={};sets.forEach(function(s){
+    var ex=examById(st,s.examId),end=s.end||(ex?addD(ex.date,-1):null),start=s.start||(ex?addD(ex.date,-90):todayS());
+    var days=[];if(end){var d=start,g=0;while(d<=end&&g<800){if(!blocked(d))days.push(d);d=addD(d,1);g++}}
+    plan[s.id]={days:days,n:Math.max(0,num(s.count,0))};
+  });
+  var maxN=sets.reduce(function(a,s){return Math.max(a,plan[s.id].n)},0),items=keep.slice(),miss=0;
+  for(var k=0;k<maxN;k++){sets.forEach(function(s){
+    var P=plan[s.id];if(k>=P.n)return;var no=k+1;
+    if(keep.some(function(it){return it.setId===s.id&&it.no===no}))return;
+    var D=P.days,a=Math.floor(D.length*k/P.n),b=Math.floor(D.length*(k+1)/P.n),seg=D.slice(a,b);
+    var cand=seg.filter(function(d){return(used[d]||0)<st.pastLimit}).sort(function(x,y){
+      var wx=wk[weekKey(x)]||0,wy=wk[weekKey(y)]||0;if(wx!==wy)return wx-wy;
+      var mx=st.weekMin[dow(x)],my=st.weekMin[dow(y)];if(mx!==my)return my-mx;return x<y?-1:1});
+    var ex=examById(st,s.examId),d=null,rv=null;
+    for(var c=0;c<cand.length;c++){var r2=nextStudy(st,cand[c],function(x){return isMockRev(st,x)});if(!ex||(r2&&r2<ex.date)){d=cand[c];rv=r2;break}}
+    if(!d){miss++;return}
+    used[d]=(used[d]||0)+1;wk[weekKey(d)]=(wk[weekKey(d)]||0)+1;
+    items.push({id:"p"+uid(),setId:s.id,no:no,date:d,reviewDate:rv,fixed:false,score:""});
+  })}
+  st.pastItems=st.pastItems.filter(function(it){return!sets.some(function(s){return s.id===it.setId})}).concat(items);
+  return miss;
+}
+
+/* ========== 描画 ========== */
+var app=document.getElementById("app");
+function render(){
+  resetMemo();
+  var g=document.querySelector(".g-scroll");if(g)S.ganttScroll={l:g.scrollLeft,t:g.scrollTop,view:S.view,sid:S.sid};
+  var st=stu();
+  if(S.mode==="loading"){return}
+  var html=head(st)+'<main class="main" id="main">'+(st?body(st):noStudent())+'</main>'+nav();
+  app.innerHTML=html;
+  if(S.toast)app.insertAdjacentHTML("beforeend",'<div class="toast" role="status">'+esc(S.toast)+'</div>');
+  afterRender(st);
+}
+function head(st){
+  var ex=st&&nextExam(st),ids=orderedIds();
+  var sel=ids.length?'<label class="sr" style="display:flex;align-items:center;gap:6px"><span class="small muted">生徒</span><select class="in" id="stuSel" data-chg="stu" style="min-width:140px;width:auto">'+ids.map(function(id){return'<option value="'+id+'"'+(id===S.sid?" selected":"")+'>'+esc(S.students[id].name)+'</option>'}).join("")+'</select></label>':"";
+  var titles={gantt:"ガントチャート",today:"今日の計画",exams:"試験日程",mats:"教材・計画",settings:"設定"};
+  return'<header class="head"><span class="brand">学習プランナー</span><span class="sub">'+titles[S.tab]+'</span><span class="sp"></span>'+
+    (ex?'<span class="pill">次の受験 '+esc(ex.name)+' '+fmt(ex.date)+'　あと <b>'+diffD(todayS(),ex.date)+'</b> 日</span>':"")+
+    (st&&S.dl&&(S.tab==="gantt"||S.tab==="today"||S.tab==="exams")?'<button class="btn" data-act="print">印刷</button>':"")+sel+'</header>';
+}
+function nav(){
+  var t=[["gantt","ガントチャート"],["today","今日の計画"],["exams","試験日程"],["mats","教材・計画"],["settings","設定"]];
+  return'<nav class="nav" aria-label="画面切替">'+t.map(function(x){return'<button data-act="tab" data-v="'+x[0]+'"'+(S.tab===x[0]?' aria-current="page"':"")+'>'+x[1]+'</button>'}).join("")+'</nav>';
+}
+function noStudent(){
+  return'<div class="empty"><h2>生徒を登録してください</h2><p>生徒を登録すると、国語・数学・英語・理科・社会の5科目が初期設定されます。</p><p><button class="btn pri" data-act="addStudent">生徒を追加</button></p>'+
+    '<p><button class="btn" data-act="loadSample">サンプルデータで試す</button></p><p class="small">データはこの端末のブラウザ内に保存されます。設定画面から定期的に書き出してください。</p></div>';
+}
+function body(st){
+  var b=backupNote(st);
+  if(S.tab==="today")return b+viewToday(st);
+  if(S.tab==="exams")return b+viewExams(st);
+  if(S.tab==="mats")return b+viewMats(st);
+  if(S.tab==="settings")return viewSettings(st);
+  return b+viewGantt(st);
+}
+function backupNote(st){
+  var le=st.lastExport;if(!st.materials.length||(le&&diffD(le,todayS())<7))return"";
+  return'<div class="note row between no-print" style="margin-bottom:12px"><span style="flex:1;min-width:0">'+(le?"最後の書出し（"+fmtY(le)+"）から7日以上経過しています。":"まだ書出しをしていません。")+'データはこの端末のブラウザ内にのみ保存されています。</span><button class="btn sm" data-act="export">今すぐ書き出す</button></div>';
+}
+
+/* --- ガントチャート --- */
+var CW={day:28,week:10,month:4};
+function ganttRange(st){
+  var t=todayS(),lo=addD(t,-14),hi=addD(t,60);
+  st.materials.forEach(function(m){m.rounds.forEach(function(r,i){var rc=roundCalc(st,m,i);if(rc.start&&rc.start<lo)lo=rc.start;if(rc.end&&rc.end>hi)hi=rc.end})});
+  st.exams.forEach(function(e){if(e.date>hi)hi=e.date});
+  if(diffD(t,lo)<-120)lo=addD(t,-120);
+  lo=addD(lo,-((dow(lo)+6)%7));hi=addD(hi,7);if(diffD(lo,hi)>540)hi=addD(lo,540);
+  return{lo:lo,hi:hi,n:diffD(lo,hi)+1};
+}
+function viewGantt(st){
+  var R=ganttRange(st),cw=CW[S.view],W=R.n*cw,t=todayS(),LW=230;
+  var x=function(d){return diffD(R.lo,d)*cw};
+  var h='<div class="g-tools"><div class="row"><div class="seg" role="group" aria-label="表示単位">'+["day:日","week:週","month:月"].map(function(v){var p=v.split(":");return'<button data-act="view" data-v="'+p[0]+'" aria-pressed="'+(S.view===p[0])+'">'+p[1]+'</button>'}).join("")+'</div>'+
+    '<button class="btn" data-act="toToday">今日へ移動</button><button class="btn" data-act="tab" data-v="mats">教材を追加</button></div>'+
+    '<div class="legend"><span><i class="lg-sw" style="background:color-mix(in srgb,var(--accent) 30%,var(--surface))"></i>計画</span><span><i class="lg-sw" style="background:var(--accent)"></i>実績</span><span><i class="lg-sw hatch" style="border:1px solid var(--line)"></i>休止日・模試日</span><span><i class="lg-sw" style="width:2px;background:var(--today)"></i>今日</span><span><i class="lg-sw" style="width:2px;background:var(--bad)"></i>受験日</span></div></div>';
+  // header
+  var hd='<div class="g-row g-head" style="height:46px"><div class="g-lab small muted" style="font-weight:700">科目・教材</div><div class="g-trk" style="width:'+W+'px;height:46px">';
+  for(var i=0;i<R.n;i++){var d=addD(R.lo,i),dd=pd(d);
+    if(dd.getDate()===1||i===0)hd+='<span class="g-mon" style="left:'+(i*cw)+'px">'+(i===0||dd.getMonth()===0?dd.getFullYear()+"年":"")+(dd.getMonth()+1)+'月</span>';
+    if(S.view==="day"){var w=dow(d),cls="g-day"+(w===0||w===6?" we":"")+(d===t?" td":"");
+      var col=d===t?"":(st.holidays[d]||w===0?"color:var(--bad)":(w===6?"color:var(--accent)":""));
+      hd+='<div class="'+cls+'" style="left:'+(i*cw)+'px;width:'+cw+'px;top:18px;'+col+'"><b>'+dd.getDate()+'</b><span>'+WD[w]+'</span></div>'}
+    else if(S.view==="week"&&w0(d)){hd+='<div class="g-day" style="left:'+(i*cw)+'px;width:'+(7*cw)+'px;top:18px;font-size:10px;color:var(--muted)">'+fmt(d)+'</div>'}
+  }
+  hd+='</div></div>';
+  // exam/event row
+  var evr='<div class="g-row" style="height:46px"><div class="g-lab"><span class="chip" style="background:var(--ink);color:var(--bg)">試験</span><span class="tx"><span class="nm">模試・過去問</span><span class="mt">塗り：実施　枠：復習</span></span></div><div class="g-trk" style="width:'+W+'px;height:46px">';
+  var evs=[];st.mocks.forEach(function(m){evs.push([m.date,"模","var(--ink)",true,m.name]);if(m.reviewDate)evs.push([m.reviewDate,"復","var(--ink)",false,m.name+" 復習"])});
+  st.pastItems.forEach(function(it){var ps=pastSetOf(st,it.setId);if(!ps)return;var sj=subjById(st,ps.subjectId),c=sj?sj.color:"var(--ink)";
+    if(it.date)evs.push([it.date,"過",c,true,(sj?sj.name:"")+" 過去問"+it.no]);if(it.reviewDate)evs.push([it.reviewDate,"復",c,false,(sj?sj.name:"")+" 過去問"+it.no+" 復習"])});
+  evs.forEach(function(e){if(e[0]<R.lo||e[0]>R.hi)return;var wv=S.view==="day"?cw-4:Math.max(4,cw);
+    evr+='<span class="ev" title="'+esc(fmt(e[0])+" "+e[4])+'" style="left:'+(x(e[0])+(S.view==="day"?2:0))+'px;width:'+wv+'px;'+(e[3]?'background:'+e[2]+';border-color:'+e[2]+';color:var(--chip-ink)':'background:var(--surface);border:2px solid '+e[2]+';color:'+e[2])+(e[2]==="var(--ink)"&&e[3]?';color:var(--bg)':'')+'">'+(S.view==="day"?e[1]:"")+'</span>'});
+  evr+='</div></div>';
+  // material rows
+  var rows="";
+  st.subjects.forEach(function(sj){
+    st.materials.filter(function(m){return m.subjectId===sj.id}).forEach(function(m){
+      var lg=lagOf(st,m),ex=targetExam(st,m),lastEnd=null;
+      m.rounds.forEach(function(r,i){var rc=roundCalc(st,m,i);if(rc.end&&(!lastEnd||rc.end>lastEnd))lastEnd=rc.end});
+      var over=ex&&lastEnd&&lastEnd>=ex.date;
+      var meta=num(m.total,0)+"p・"+(lg.done?"全周回完了":((lg.i!=null?lg.i+1:1)+"/"+m.rounds.length+"周"));
+      var lagT=lg.done?"完了":(lg.lag>0?"遅れ"+lg.lag+"p":(lg.lag<0?"先行"+(-lg.lag)+"p":"順調"));
+      rows+='<div class="g-row" style="height:46px"><div class="g-lab"'+(over?' style="box-shadow:inset 3px 0 0 var(--bad)"':'')+'><span class="chip" style="background:'+esc(sj.color)+';min-width:36px">'+esc(sj.name.slice(0,2))+'</span>'+
+        '<button class="tx" data-act="editMat" data-id="'+m.id+'"><span class="nm">'+esc(m.name)+'</span><span class="mt">'+esc(meta)+(over?' ・<span style="color:var(--bad);font-weight:700">受験日超過</span>':'')+'</span></button>'+
+        (lg.lag>0?'<button class="lag" data-act="adjust" data-id="'+m.id+'" style="color:var(--bad);border:1px solid var(--bad);border-radius:6px;background:var(--surface);min-height:30px;padding:0 6px" title="遅れ調整">'+lagT+'</button>':'<span class="lag" style="color:var(--muted)">'+lagT+'</span>')+'</div>'+
+        '<div class="g-trk" data-act="cell" data-id="'+m.id+'" style="width:'+W+'px;height:46px">';
+      m.rounds.forEach(function(r,i){var rc=roundCalc(st,m,i);if(!rc.ok)return;
+        var l=x(rc.start),w=(diffD(rc.start,rc.end)+1)*cw-2;if(rc.end<R.lo||rc.start>R.hi)return;
+        var dn=doneIn(m,i),fw=Math.round(w*Math.min(1,dn/Math.max(1,num(m.total,1))));
+        rows+='<button class="bar'+(over&&i===m.rounds.length-1?" over":"")+'" data-act="editMat" data-id="'+m.id+'" title="'+esc(m.name+" "+(i+1)+"周目 "+fmt(rc.start)+"〜"+fmt(rc.end)+" "+rc.ppd+"p/日")+'" style="left:'+(l+1)+'px;width:'+w+'px;background:color-mix(in srgb,'+sj.color+' 28%,var(--surface))">'+
+          '<span class="fill" style="width:'+fw+'px;background:'+esc(sj.color)+'"></span>'+(w>44?'<span class="lb" style="color:'+(fw>44?"#fff":"var(--ink)")+'">'+(i+1)+'周目</span>':'')+'</button>';
+      });
+      rows+='</div></div>';
+    });
+  });
+  if(!st.materials.length)rows='<div class="g-row" style="height:80px"><div class="g-lab small muted">教材がありません</div><div class="g-trk" style="width:'+W+'px;padding:20px" ></div></div>';
+  // load row
+  var ld='<div class="g-row" style="height:60px;background:var(--bg)"><div class="g-lab" style="background:var(--bg)"><span class="tx"><span class="nm" style="font-weight:700">日別負荷（分）</span><span class="mt">濃：実績　淡：計画　赤：標準超過</span></span></div><div class="g-trk" style="width:'+W+'px;height:60px">';
+  for(var j=0;j<R.n;j++){var d2=addD(R.lo,j),past=d2<t,v=past?actualLoad(st,d2):plannedLoad(st,d2),cap=availMin(st,d2),ovr=!past&&v>cap&&v>0;
+    if(!v)continue;var hgt=Math.max(2,Math.round(Math.min(1,v/360)*40));
+    ld+='<span class="load" title="'+fmt(d2)+" "+v+'分" style="left:'+(j*cw+Math.max(1,cw*.2))+'px;width:'+Math.max(2,cw*.6)+'px;height:'+hgt+'px;background:'+(ovr?"var(--bad)":(past?"var(--muted)":"color-mix(in srgb,var(--muted) 45%,var(--surface))"))+'"></span>';
+    if(S.view==="day"&&ovr)ld+='<span style="position:absolute;left:'+(j*cw)+'px;width:'+cw+'px;top:2px;text-align:center;font-size:9px;font-weight:700;color:var(--bad)">'+v+'</span>';}
+  ld+='</div></div>';
+  // overlays
+  var ov="",top=46;
+  for(var k=0;k<R.n;k++){var d3=addD(R.lo,k);if(st.holidays[d3]||isMockDay(st,d3))ov+='<div class="ov hatch" style="left:'+(LW+k*cw)+'px;width:'+cw+'px;top:'+top+'px;bottom:0"></div>'}
+  if(t>=R.lo&&t<=R.hi)ov+='<div class="ov" style="left:'+(LW+x(t)+cw/2-1)+'px;width:2px;top:'+top+'px;bottom:0;background:var(--today)"></div>';
+  st.exams.forEach(function(e){if(e.date<R.lo||e.date>R.hi)return;ov+='<div class="ov" style="left:'+(LW+x(e.date)+cw/2-1)+'px;width:2px;top:18px;bottom:0;background:var(--bad)"></div><div class="ov" style="left:'+(LW+x(e.date)+cw/2+3)+'px;top:'+(top+2)+'px;font-size:11px;font-weight:700;color:var(--bad);white-space:nowrap;background:var(--surface);padding:0 3px;z-index:3">'+esc(e.name)+'</div>'});
+  var warn=ganttWarnings(st,R);
+  return h+'<div class="g-scroll" id="gscroll"><div class="g-inner" style="width:'+(LW+W)+'px">'+hd+evr+rows+ld+ov+'</div></div>'+
+    '<div class="row" style="margin-top:10px">'+warn+'<span class="small muted no-print">バーをタップ：教材の編集　／　行の日付部分をタップ：その日の記録を入力</span></div>';
+}
+function w0(d){return dow(d)===1}
+function ganttWarnings(st,R){
+  var t=todayS(),over=[];for(var i=0;i<45;i++){var d=addD(t,i);var v=plannedLoad(st,d),c=availMin(st,d);if(c>0&&v>c)over.push(d)}
+  if(!over.length)return"";
+  return'<div class="note bad" style="flex:1">今後45日のうち'+over.length+'日（初回 '+fmtW(over[0])+'）は、計画上の所要時間が標準学習時間を超えます。教材の期間又は1日ページ数を見直してください。</div>';
+}
+
+/* --- 今日の計画 --- */
+function viewToday(st){
+  var d=S.date,P=dayPlan(st,d),isT=d===todayS();
+  var left='<section class="stack"><div><div class="row"><button class="sq" data-act="day" data-v="-1" aria-label="前の日">‹</button><span class="big">'+fmtY(d)+"（"+WD[dow(d)]+'）</span><button class="sq" data-act="day" data-v="1" aria-label="次の日">›</button>'+(isT?"":'<button class="btn sm" data-act="day" data-v="0">今日</button>')+'</div>'+
+    '<div class="small muted" style="margin-top:4px">'+(P.mockDay?"模試の実施日です。":(prevStudy(st,d)?"前学習日："+fmtW(prevStudy(st,d)):""))+(st.holidays[d]?"　この日は休止日です。":"")+'</div></div>';
+  left+='<div class="card"><label for="availIn" class="h2" style="font-size:14px">この日の学習可能時間</label><div class="stepper" style="margin-top:8px"><button class="sq" data-act="avail" data-v="-10" aria-label="10分減らす">−</button><div class="val"><span id="availIn">'+P.avail+'</span><small> 分</small></div><button class="sq" data-act="avail" data-v="10" aria-label="10分増やす">＋</button></div>'+
+    '<div class="small muted" style="text-align:center;margin-top:6px">'+WD[dow(d)]+'曜日の標準 '+st.weekMin[dow(d)]+'分'+(st.overrides[d]!=null?'　<button class="btn sm" data-act="availReset">標準に戻す</button>':'')+'</div></div>';
+  var tot=Math.max(P.avail,P.used,1);
+  left+='<div class="card stack" style="gap:10px"><div class="row between"><span class="h2" style="font-size:14px">時間配分</span><span><b>'+P.used+'</b> / '+P.avail+'分</span></div><div class="allocbar">'+
+    (P.fixedMin?'<span style="width:'+(P.fixedMin/tot*100)+'%;background:var(--ink)"></span>':'')+
+    P.subs.map(function(s){return'<span style="width:'+(s.total/tot*100)+'%;background:'+esc(s.sj.color)+'"></span>'}).join("")+'</div>'+
+    (P.fixedMin?'<div class="row small"><i class="dot" style="background:var(--ink)"></i><span style="flex:1">固定予定</span><b>'+P.fixedMin+'分</b></div>':'')+
+    P.subs.map(function(s){var nw=s.total-s.rev;return'<div class="row small"><i class="dot" style="background:'+esc(s.sj.color)+'"></i><span style="width:3.5em">'+esc(s.sj.name)+'</span><span class="muted" style="flex:1">復習 '+s.rev+'分 ＋ 新規 '+nw+'分</span><b>'+s.total+'分</b></div>'}).join("")+
+    '<div class="row small muted"><i class="dot" style="background:var(--line-soft)"></i><span style="flex:1">余り</span><span>'+Math.max(0,P.avail-P.used)+'分</span></div></div>';
+  if(P.adjusted&&P.needTotal>0)left+='<div class="note">予定合計'+(P.fixedMin+P.revTotal+P.needTotal)+'分が学習可能時間'+P.avail+'分を超えたため、固定予定と教材の復習を確保し、残り'+P.T+'分を優先度に応じて新規に配分しました。新規'+P.cut+'ページ（'+P.cutMin+'分）は翌日以降に繰り越します。</div>';
+  if(P.fixedMin>P.avail)left+='<div class="note bad">固定予定だけで学習可能時間を超えています。</div>';
+  left+='</section>';
+  var right='<section class="stack"><div class="row between"><span class="h2">科目別の学習内容（復習 → 新規）</span></div>';
+  if(P.fixed.length){right+='<div class="card"><div class="h2" style="font-size:14px">固定予定</div>'+P.fixed.map(function(f){var on=getCheck(d,f.key),c=f.color||"var(--ink)";
+    return'<div class="task" style="grid-template-columns:72px minmax(0,1fr) auto auto"><span class="k">'+f.kind+'</span><span>'+esc(f.label)+'</span><span class="mn">'+(f.min?f.min+"分":"終日")+'</span><button class="tog" data-act="check" data-k="'+esc(f.key)+'" aria-pressed="'+on+'" style="'+(on?"background:"+c+";border-color:"+c+(c==="var(--ink)"?";color:var(--bg)":""):"")+'">'+(on?"✓ 済":"済")+'</button></div>'}).join("")+'</div>'}
+  if(!P.subs.length&&!P.fixed.length)right+='<div class="card empty" style="padding:28px"><p>'+(isStudy(st,d)?"この日に予定された学習はありません。教材・計画画面で教材の期間を設定してください。":"この日は学習日ではありません。")+'</p></div>';
+  right+='<div class="cards">'+P.subs.map(function(s){
+    return'<div class="card"><div class="row"><span class="chip" style="background:'+esc(s.sj.color)+'">'+esc(s.sj.name)+'</span><span class="small muted" style="border:1px solid var(--line);border-radius:4px;padding:0 6px">優先度 '+esc(s.sj.prio||"中")+'</span><span class="sp" style="flex:1"></span><span class="small muted">割当 <b style="color:var(--ink)">'+s.total+'分</b></span></div>'+
+      s.items.map(function(x){var m=x.m,rec=getRec(d,m.id),rvOn=getCheck(d,"rev:"+m.id),c=s.sj.color,out="";
+        out+='<div style="margin-top:10px;font-size:14px;font-weight:700">'+esc(m.name)+(x.plan?'<span class="small muted" style="font-weight:400">（'+(x.plan.round+1)+'周目）</span>':'')+'</div>';
+        if(x.rev)out+='<div class="task"><span class="k">復習</span><span class="small">'+fmt(x.rev.date)+' p.'+x.rev.from+'–'+x.rev.to+'（'+x.rev.pages+'p）</span><span class="mn">'+x.rev.min+'分</span><button class="tog" data-act="check" data-k="rev:'+m.id+'" aria-pressed="'+rvOn+'" style="'+(rvOn?"background:"+esc(c)+";border-color:"+esc(c):"")+'">'+(rvOn?"✓ 済":"済")+'</button></div>';
+        if(x.plan||rec){var on=!!rec;
+          var txt=rec?'p.'+rec.from+'–'+rec.to+'（'+rec.pages+'p 記録済）':(x.pages>0?'p.'+x.from+'–'+x.to+'（'+x.pages+'p）':'今日は配分なし（繰越）');
+          out+='<div class="task"><span class="k">新規</span><span class="small">'+txt+'</span><span class="mn">'+(rec?Math.round(rec.pages*mppOf(m,rec.round)):x.min)+'分</span><button class="tog" data-act="done" data-id="'+m.id+'" aria-pressed="'+on+'" style="'+(on?"background:"+esc(c)+";border-color:"+esc(c):"")+'"'+(!rec&&!x.pages?" disabled":"")+'>'+(on?"✓ 完了":"完了")+'</button>'+
+            '<label class="reach">到達ページ<input class="in" type="number" inputmode="numeric" data-chg="reach" data-id="'+m.id+'" value="'+(rec?rec.to:"")+'" placeholder="'+(x.pages>0?x.to:"")+'">実施時間<input class="in" type="number" inputmode="numeric" data-chg="recmin" data-id="'+m.id+'" value="'+(rec&&rec.min?rec.min:"")+'" placeholder="分"'+(rec?"":" disabled")+'>分</label></div>'}
+        return out}).join("")+'</div>'}).join("")+'</div></section>';
+  return'<div class="today-wrap">'+left+right+'</div>';
+}
+
+/* --- 試験日程 --- */
+function viewExams(st){
+  var t=todayS();
+  var exams='<div class="card"><div class="row between"><span class="h2">受験</span><button class="btn sm dash" data-act="exam">＋ 追加</button></div>'+
+    (st.exams.length?'<div class="tbl-wrap"><table class="tbl" style="margin-top:6px"><thead><tr><th>名称</th><th>区分</th><th>受験日</th><th>残り</th></tr></thead><tbody>'+st.exams.slice().sort(function(a,b){return a.date<b.date?-1:1}).map(function(e){
+      return'<tr><td><button class="btn sm" data-act="exam" data-id="'+e.id+'" style="font-weight:700">'+esc(e.name)+'</button></td><td>'+esc(e.kind||"")+'</td><td>'+fmtY(e.date)+'（'+WD[dow(e.date)]+'）</td><td>'+(e.date>=t?"あと"+diffD(t,e.date)+"日":"終了")+'</td></tr>'}).join("")+'</tbody></table></div>':'<p class="small muted">受験日を追加してください。教材と過去問の期限に使います。</p>')+'</div>';
+  var mocks='<div class="card"><div class="row between"><span class="h2">模試</span><button class="btn sm dash" data-act="mock">＋ 追加</button></div>'+
+    (st.mocks.length?'<div class="tbl-wrap"><table class="tbl" style="margin-top:6px"><thead><tr><th>名称</th><th>実施日</th><th>復習日（所要）</th><th>状態</th></tr></thead><tbody>'+st.mocks.slice().sort(function(a,b){return a.date<b.date?-1:1}).map(function(m){
+      var dn=getCheck(m.date,"mock:"+m.id),rd=m.reviewDate&&getCheck(m.reviewDate,"mockrev:"+m.id);
+      return'<tr><td><button class="btn sm" data-act="mock" data-id="'+m.id+'" style="font-weight:700">'+esc(m.name)+'</button></td><td>'+fmtW(m.date)+'</td><td>'+fmtW(m.reviewDate)+' '+num(m.reviewMin,120)+'分</td><td class="small" style="font-weight:700;color:'+(rd?"var(--muted)":"var(--accent)")+'">'+(rd?"復習済":(dn?"実施済":"予定"))+'</td></tr>'}).join("")+'</tbody></table></div>':'<p class="small muted">模試を追加すると、実施日は教材の学習から除外され、復習日に復習時間が確保されます。</p>')+'</div>';
+  var past='<div class="card"><div class="row between"><span class="h2">過去問（科目別）</span><div class="row"><span class="small muted">1日の上限 '+st.pastLimit+'回</span><button class="btn sm dash" data-act="pastSet">＋ 追加</button><button class="btn sm pri" data-act="autoPlace"'+(st.pastSets.length?"":" disabled")+'>自動配置</button></div></div>'+
+    (st.pastSets.length?'<div class="tbl-wrap"><table class="tbl" style="margin-top:6px"><thead><tr><th>科目</th><th>対象受験</th><th>回数</th><th>所要</th><th>復習</th><th>配置期間</th><th>配置／実施</th></tr></thead><tbody>'+st.pastSets.map(function(p){
+      var sj=subjById(st,p.subjectId),ex=examById(st,p.examId),its=st.pastItems.filter(function(i){return i.setId===p.id}),dn=its.filter(function(i){return i.date&&getCheck(i.date,"past:"+i.id)}).length;
+      var s=p.start||(ex?addD(ex.date,-90):""),e=p.end||(ex?addD(ex.date,-1):"");
+      return'<tr><td><button class="btn sm" data-act="pastSet" data-id="'+p.id+'"><i class="dot" style="background:'+esc(sj?sj.color:"#888")+'"></i>&nbsp;'+esc(sj?sj.name:"（削除済）")+'</button></td><td>'+esc(ex?ex.name:"—")+'</td><td><b>'+num(p.count,0)+'回</b></td><td>'+num(p.min,50)+'分</td><td>'+num(p.reviewMin,30)+'分</td><td class="small">'+fmt(s)+'〜'+fmt(e)+'</td><td class="small">'+its.filter(function(i){return i.date}).length+'／'+dn+'</td></tr>'}).join("")+'</tbody></table></div>':'<p class="small muted">科目ごとに過去問の回数を設定し、「自動配置」を押すと、実施日と復習日を期間内に分散して割り当てます。</p>')+'</div>';
+  return'<div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr))"><div class="stack">'+exams+mocks+'</div><div class="stack">'+past+examCal(st)+'</div></div>';
+}
+function examCal(st){
+  var mo=S.calMonth,first=pd(mo+"-01"),y=first.getFullYear(),m=first.getMonth(),days=new Date(y,m+1,0).getDate(),lead=(first.getDay()+6)%7,t=todayS();
+  var ev={};function add(d,o){(ev[d]=ev[d]||[]).push(o)}
+  st.mocks.forEach(function(x){add(x.date,{l:x.name,c:"var(--ink)",f:true,act:"mock",id:x.id});if(x.reviewDate)add(x.reviewDate,{l:"模試 復習",c:"var(--ink)",f:false,act:"mock",id:x.id})});
+  st.pastItems.forEach(function(it){var ps=pastSetOf(st,it.setId);if(!ps)return;var sj=subjById(st,ps.subjectId),n=(sj?sj.name:"")+it.no;
+    if(it.date)add(it.date,{l:n+" 実施"+(it.fixed?"＊":""),c:sj?sj.color:"var(--ink)",f:true,act:"pastItem",id:it.id});
+    if(it.reviewDate)add(it.reviewDate,{l:n+" 復習",c:sj?sj.color:"var(--ink)",f:false,act:"pastItem",id:it.id})});
+  st.exams.forEach(function(e){add(e.date,{l:e.name+" 受験",c:"var(--bad)",f:true,act:"exam",id:e.id})});
+  var h='<div class="card"><div class="row between"><span class="h2">配置結果</span><div class="row"><button class="sq" data-act="calM" data-v="-1" aria-label="前の月">‹</button><b style="min-width:7em;text-align:center">'+y+'年'+(m+1)+'月</b><button class="sq" data-act="calM" data-v="1" aria-label="次の月">›</button></div></div>'+
+    '<div class="cal" style="margin-top:8px">'+"月火水木金土日".split("").map(function(w,i){return'<span class="hd" style="'+(i===5?"color:var(--accent)":(i===6?"color:var(--bad)":""))+'">'+w+'</span>'}).join("");
+  for(var i=0;i<lead;i++)h+='<span></span>';
+  for(var dd=1;dd<=days;dd++){var d=mo+"-"+pad(dd),off=!isStudy(st,d);
+    h+='<div class="c'+(d===t?" td":"")+(off?" off":"")+'"><span class="n" style="color:'+(st.holidays[d]||dow(d)===0?"var(--bad)":(dow(d)===6?"var(--accent)":"var(--ink)"))+'">'+dd+(st.holidays[d]?" 休":"")+'</span>'+
+      (ev[d]||[]).map(function(e){return'<button class="tag" data-act="'+e.act+'" data-id="'+e.id+'" style="border-color:'+e.c+';'+(e.f?"background:"+e.c+";color:"+(e.c==="var(--ink)"?"var(--bg)":"#fff"):"color:"+e.c)+'">'+esc(e.l)+'</button>'}).join("")+'</div>'}
+  return h+'</div><div class="small muted" style="margin-top:6px">塗り：実施日　枠：復習日　＊：手動で固定した回（自動配置の対象外）。予定をタップすると編集できます。</div></div>';
+}
+
+/* --- 教材・計画 --- */
+function viewMats(st){
+  if(S.adj)return viewAdjust(st);
+  var list='<div class="mlist">'+st.subjects.map(function(sj){var ms=st.materials.filter(function(m){return m.subjectId===sj.id});
+    return'<div class="small muted" style="font-weight:700;padding:6px 4px 2px;display:flex;align-items:center;gap:6px"><i class="dot" style="background:'+esc(sj.color)+'"></i>'+esc(sj.name)+'</div>'+
+      ms.map(function(m){return'<button class="mitem" data-act="editMat" data-id="'+m.id+'" aria-current="'+(S.matSel===m.id)+'"><span>'+esc(m.name)+'</span><span class="mt">'+num(m.total,0)+'p・'+m.rounds.length+'周</span></button>'}).join("")+
+      (ms.length?"":'<span class="small muted" style="padding:0 8px">（教材なし）</span>')}).join("")+
+    '<button class="btn dash" data-act="newMat" style="margin-top:10px">＋ 教材を追加</button></div>';
+  var ed=S.draft?matEditor(st,S.draft):'<div class="card empty"><p>左の一覧から教材を選ぶか、「教材を追加」を押してください。</p></div>';
+  return'<div class="mat-layout"><aside>'+list+'</aside><section>'+ed+'</section></div>';
+}
+function matEditor(st,m){
+  var isNew=!st.materials.some(function(x){return x.id===m.id});
+  var opt=function(arr,sel,lab){return arr.map(function(a){return'<option value="'+a.id+'"'+(a.id===sel?" selected":"")+'>'+esc(lab(a))+'</option>'}).join("")};
+  var h='<div class="card stack"><div class="row between"><span class="h2" style="font-size:19px">'+(isNew?"教材の追加":"教材の編集")+'</span><div class="row">'+(isNew?"":'<button class="btn" data-act="adjust" data-id="'+m.id+'">遅れ調整</button><button class="btn danger" data-act="delMat">削除</button>')+'<button class="btn" data-act="cancelMat">閉じる</button><button class="btn pri" data-act="saveMat">保存</button></div></div>'+
+    '<div class="fg3"><label class="f">教材名<input class="in" id="m-name" data-d="name" value="'+esc(m.name)+'"></label>'+
+    '<label class="f">科目<select class="in" id="m-subj" data-d="subjectId">'+opt(st.subjects,m.subjectId,function(a){return a.name})+'</select></label>'+
+    '<label class="f">目標受験<select class="in" id="m-exam" data-d="examId"><option value="">（最も早い受験）</option>'+opt(st.exams,m.examId,function(a){return a.name+"（"+fmt(a.date)+"）"})+'</select></label>'+
+    '<label class="f">総ページ数<input class="in" id="m-total" type="number" inputmode="numeric" min="1" data-d="total" value="'+esc(m.total)+'"></label>'+
+    '<label class="f">開始ページ<input class="in" id="m-sp" type="number" inputmode="numeric" min="1" data-d="startPage" value="'+esc(m.startPage)+'"></label>'+
+    '<label class="f">1ページ所要時間の既定値（分）<input class="in" id="m-mpp" type="number" inputmode="decimal" min="0.1" step="0.1" data-d="mpp" value="'+esc(m.mpp)+'"></label></div>'+
+    '<div class="row"><span class="small muted" style="font-weight:700">周回数</span><div class="seg sm" role="group" aria-label="周回数">'+[1,2,3,4,5].map(function(n){return'<button data-act="rounds" data-v="'+n+'" aria-pressed="'+(m.rounds.length===n)+'">'+n+'</button>'}).join("")+'</div>'+
+    '<span class="small muted" style="font-weight:700;margin-left:12px">算出方式</span><div class="seg sm" role="group" aria-label="算出方式"><button data-act="method" data-v="A" aria-pressed="'+(m.method!=="B")+'">A 期間指定</button><button data-act="method" data-v="B" aria-pressed="'+(m.method==="B")+'">B 1日ページ数指定</button></div></div>'+
+    '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>周回</th><th>開始日</th><th>'+(m.method==="B"?"1日ページ数":"終了日")+'</th><th>1p所要（分）</th><th>学習日数</th><th>'+(m.method==="B"?"終了日（算出）":"1日ページ数（算出）")+'</th><th>所要／日</th></tr></thead><tbody id="rtb">'+roundRows(st,m)+'</tbody></table></div>'+
+    '<div class="row"><button class="btn" data-act="split">目標受験日までを均等に割る</button><span class="small muted">青字は自動計算値です。1p所要が空欄の周回は既定値を使います。休止日と模試日は学習日数から除外します。</span></div><div id="msum">'+matSummary(st,m)+'</div></div>';
+  return h;
+}
+function roundRows(st,m){
+  return m.rounds.map(function(r,i){var rc=roundCalc(st,m,i);
+    return'<tr><td><b>'+(i+1)+'周目</b></td><td><input class="in" type="date" data-r="'+i+'" data-k="start" value="'+(r.start||"")+'"></td><td>'+
+      (m.method==="B"?'<input class="in" type="number" inputmode="numeric" min="1" data-r="'+i+'" data-k="ppd" value="'+(r.ppd||"")+'" style="max-width:110px">':'<input class="in" type="date" data-r="'+i+'" data-k="end" value="'+(r.end||"")+'">')+
+      '</td><td><input class="in" type="number" inputmode="decimal" min="0.1" step="0.1" aria-label="'+(i+1)+'周目の1ページ所要時間" data-r="'+i+'" data-k="mpp" value="'+(r.mpp!=null?esc(r.mpp):"")+'" placeholder="'+esc(m.mpp)+'" style="max-width:90px"></td><td class="muted">'+(rc.ok?rc.days+"日":"—")+'</td><td class="calc">'+(rc.ok?(m.method==="B"?fmtY(rc.end):rc.ppd+" p/日"):"—")+'</td><td class="muted">'+(rc.ok?Math.round(rc.ppd*mppOf(m,i))+"分":"—")+'</td></tr>'}).join("");
+}
+function matSummary(st,m){
+  var ex=targetExam(st,m),last=null,bad=false,prevEnd=null;
+  m.rounds.forEach(function(r,i){var rc=roundCalc(st,m,i);if(!rc.ok){bad=true;return}if(prevEnd&&rc.start<=prevEnd)bad="ov";prevEnd=rc.end;last=rc.end});
+  if(bad==="ov")return'<div class="note bad">周回の期間が前の周回と重なっています。開始日を見直してください。</div>';
+  if(bad||!last)return'<div class="note">すべての周回に開始日と'+(m.method==="B"?"1日ページ数":"終了日")+'を入力してください。</div>';
+  if(!ex)return'<div class="note good">最終周回の終了日：'+fmtY(last)+'（受験日が未登録です）</div>';
+  var gap=diffD(last,ex.date)-1;
+  return gap>=0?'<div class="note good">最終周回の終了日：'+fmtY(last)+'　目標受験（'+esc(ex.name)+' '+fmt(ex.date)+'）まで'+gap+'日の余裕があります。</div>':'<div class="note bad">最終周回の終了日（'+fmtY(last)+'）が目標受験日（'+esc(ex.name)+' '+fmt(ex.date)+'）以降です。</div>';
+}
+
+/* --- 設定 --- */
+function viewSettings(st){
+  var ids=orderedIds();
+  var studs='<div class="card stack"><div class="row between"><span class="h2">生徒</span><button class="btn sm dash" data-act="addStudent">＋ 生徒を追加</button></div>'+
+    '<label class="f">この生徒の氏名<input class="in" id="s-name" data-chg="stuName" value="'+esc(st.name)+'"></label>'+
+    '<div class="row">'+ids.map(function(id){return'<button class="btn'+(id===S.sid?" dark":"")+'" data-act="pickStu" data-id="'+id+'">'+esc(S.students[id].name)+'</button>'}).join("")+'</div>'+
+    '<div><button class="btn sm danger" data-act="delStudent">この生徒を削除</button></div></div>';
+  var gen='<div class="card"><span class="h2">学習の設定</span><div class="fg3" style="margin-top:10px"><label class="f">復習係数（%）<input class="in" id="s-rr" type="number" inputmode="numeric" min="0" max="200" data-chg="num" data-k="reviewRate" value="'+st.reviewRate+'"></label>'+
+    '<label class="f">過去問の1日上限（回）<input class="in" id="s-pl" type="number" inputmode="numeric" min="1" max="5" data-chg="num" data-k="pastLimit" value="'+st.pastLimit+'"></label></div>'+
+    '<div class="small muted" style="margin-top:8px">復習時間＝前学習日の実績ページ×1ページ所要時間×復習係数</div></div>';
+  var subs='<div class="card"><div class="row between"><span class="h2">科目（名称・色・優先度）</span><button class="btn sm dash" data-act="addSubj">＋ 科目を追加</button></div><div class="tbl-wrap"><table class="tbl" style="margin-top:6px"><tbody>'+
+    st.subjects.map(function(sj,i){var cnt=st.materials.filter(function(m){return m.subjectId===sj.id}).length;
+      return'<tr><td style="width:56px"><input class="in" type="color" aria-label="'+esc(sj.name)+'の表示色" data-chg="subj" data-id="'+sj.id+'" data-k="color" value="'+esc(sj.color)+'"></td><td><input class="in" aria-label="科目名" data-chg="subj" data-id="'+sj.id+'" data-k="name" value="'+esc(sj.name)+'"></td>'+
+        '<td><div class="seg sm" role="group" aria-label="優先度">'+["高","中","低"].map(function(p){return'<button data-act="prio" data-id="'+sj.id+'" data-v="'+p+'" aria-pressed="'+((sj.prio||"中")===p)+'">'+p+'</button>'}).join("")+'</div></td>'+
+        '<td class="small muted" style="white-space:nowrap">教材'+cnt+'件</td><td style="white-space:nowrap"><button class="btn sm" data-act="subjUp" data-id="'+sj.id+'" aria-label="上へ"'+(i?"":" disabled")+'>↑</button> <button class="btn sm danger" data-act="delSubj" data-id="'+sj.id+'" aria-label="削除">削除</button></td></tr>'}).join("")+
+    '</tbody></table></div><div class="small muted" style="margin-top:6px">時間が足りない日は、優先度（高1.5・中1.0・低0.5）に応じて新規学習の時間を配分します。</div></div>';
+  var wk='<div class="card"><span class="h2">曜日別の標準学習時間（分）</span><div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-top:10px">'+
+    [1,2,3,4,5,6,0].map(function(w){return'<label class="f" style="align-items:center;color:'+(w===0?"var(--bad)":(w===6?"var(--accent)":"var(--muted)"))+'">'+WD[w]+'<input class="in" type="number" inputmode="numeric" min="0" step="10" data-chg="week" data-k="'+w+'" value="'+st.weekMin[w]+'" style="text-align:center;padding:0 4px"></label>'}).join("")+
+    '</div><div class="small muted" style="margin-top:8px">0分の曜日は学習日から除外します。</div></div>';
+  var mo=S.holMonth,first=pd(mo+"-01"),y=first.getFullYear(),mm=first.getMonth(),dn=new Date(y,mm+1,0).getDate(),lead=(first.getDay()+6)%7,cnt=Object.keys(st.holidays).filter(function(k){return st.holidays[k]}).length;
+  var hol='<div class="card"><div class="row between"><span class="h2">休止日（タップで設定・解除）</span><div class="row"><button class="sq" data-act="holM" data-v="-1" aria-label="前の月">‹</button><b style="min-width:7em;text-align:center">'+y+'年'+(mm+1)+'月</b><button class="sq" data-act="holM" data-v="1" aria-label="次の月">›</button></div></div>'+
+    '<div class="cal hcal" style="margin-top:8px">'+"月火水木金土日".split("").map(function(w){return'<span class="hd">'+w+'</span>'}).join("");
+  for(var i=0;i<lead;i++)hol+='<span></span>';
+  for(var d=1;d<=dn;d++){var k=mo+"-"+pad(d),on=!!st.holidays[k];hol+='<button class="c'+(on?" on hatch":"")+(k===todayS()?" td":"")+'" data-act="hol" data-v="'+k+'" aria-pressed="'+on+'">'+d+'</button>'}
+  hol+='</div><div class="small muted" style="margin-top:6px">登録済みの休止日：'+cnt+'日</div></div>';
+  var bk='<div class="card"><span class="h2">バックアップ</span><p class="small muted" style="margin:6px 0 10px">この生徒の設定と記録をJSONファイルに書き出し、又は読み込みます。'+(st.lastExport?"最終書出し："+fmtY(st.lastExport):"まだ書き出していません。")+'</p><div class="row">'+
+    (S.dl?'<button class="btn dark" data-act="export">書出し</button>':'<span class="small muted">この表示ではファイルを保存できません。</span>')+'<button class="btn" data-act="import">読込み</button></div></div>';
+  return'<div class="grid2"><div class="stack">'+studs+gen+subs+'</div><div class="stack">'+wk+hol+bk+'</div></div>';
+}
+
+/* ========== モーダル ========== */
+var modal=document.getElementById("modal");
+function openModal(html){modal.innerHTML='<div class="mask" data-act="maskClose"><div class="dlg" role="dialog" aria-modal="true">'+html+'</div></div>';var f=modal.querySelector("input,select,button");if(f)f.focus()}
+function closeModal(){modal.innerHTML="";M=null}
+var M=null;
+function mval(id){var e=document.getElementById(id);return e?e.value:""}
+function confirmBox(msg,okLabel,fn){M={ok:fn};openModal('<h3>確認</h3><p style="margin:0">'+esc(msg)+'</p><div class="acts"><button class="btn" data-act="close">取消し</button><button class="btn danger" data-act="mOk">'+esc(okLabel)+'</button></div>')}
+function toast(t){S.toast=t;render();clearTimeout(toast.h);toast.h=setTimeout(function(){S.toast="";render()},3200)}
+
+function dlgExam(st,id){
+  var e=id?examById(st,id):{id:"e"+uid(),name:"",kind:"",date:""};
+  M={type:"exam",id:e.id,isNew:!id};
+  openModal('<h3>'+(id?"受験の編集":"受験の追加")+'</h3><div class="fgrid"><label class="f">名称（志望校等）<input class="in" id="x-name" value="'+esc(e.name)+'"></label><label class="f">区分<input class="in" id="x-kind" value="'+esc(e.kind)+'" placeholder="第一志望 など"></label><label class="f">受験日<input class="in" type="date" id="x-date" value="'+esc(e.date)+'"></label></div>'+
+    '<div class="acts">'+(id?'<button class="btn danger" data-act="mDel">削除</button>':'')+'<button class="btn" data-act="close">取消し</button><button class="btn pri" data-act="mSave">保存</button></div>');
+}
+function dlgMock(st,id){
+  var m=id?st.mocks.find(function(x){return x.id===id}):{id:"k"+uid(),name:"",date:"",reviewDate:"",reviewMin:120};
+  M={type:"mock",id:m.id,isNew:!id};
+  openModal('<h3>'+(id?"模試の編集":"模試の追加")+'</h3><div class="fgrid"><label class="f" style="grid-column:1/-1">名称<input class="in" id="x-name" value="'+esc(m.name)+'"></label><label class="f">実施日<input class="in" type="date" id="x-date" value="'+esc(m.date)+'"></label><label class="f">復習日（空欄＝翌学習日）<input class="in" type="date" id="x-rdate" value="'+esc(m.reviewDate||"")+'"></label><label class="f">復習所要時間（分）<input class="in" type="number" inputmode="numeric" id="x-rmin" value="'+esc(num(m.reviewMin,120))+'"></label></div>'+
+    '<div class="acts">'+(id?'<button class="btn danger" data-act="mDel">削除</button>':'')+'<button class="btn" data-act="close">取消し</button><button class="btn pri" data-act="mSave">保存</button></div>');
+}
+function dlgPastSet(st,id){
+  if(!st.exams.length){toast("先に受験日を追加してください。");return}
+  var p=id?pastSetOf(st,id):{id:"q"+uid(),examId:st.exams[0].id,subjectId:st.subjects[0]&&st.subjects[0].id,count:5,min:50,reviewMin:30,start:"",end:""};
+  M={type:"pastSet",id:p.id,isNew:!id};
+  openModal('<h3>'+(id?"過去問の設定":"過去問の追加")+'</h3><div class="fgrid"><label class="f">科目<select class="in" id="x-subj">'+st.subjects.map(function(s){return'<option value="'+s.id+'"'+(s.id===p.subjectId?" selected":"")+'>'+esc(s.name)+'</option>'}).join("")+'</select></label>'+
+    '<label class="f">対象受験<select class="in" id="x-exam">'+st.exams.map(function(e){return'<option value="'+e.id+'"'+(e.id===p.examId?" selected":"")+'>'+esc(e.name)+'</option>'}).join("")+'</select></label>'+
+    '<label class="f">実施回数<input class="in" type="number" inputmode="numeric" min="1" max="30" id="x-count" value="'+esc(p.count)+'"></label><label class="f">1回の所要時間（分）<input class="in" type="number" inputmode="numeric" id="x-min" value="'+esc(p.min)+'"></label>'+
+    '<label class="f">復習所要時間（分）<input class="in" type="number" inputmode="numeric" id="x-rmin" value="'+esc(p.reviewMin)+'"></label><span></span>'+
+    '<label class="f">配置期間の開始（空欄＝受験日の90日前）<input class="in" type="date" id="x-start" value="'+esc(p.start||"")+'"></label><label class="f">配置期間の終了（空欄＝受験日の前日）<input class="in" type="date" id="x-end" value="'+esc(p.end||"")+'"></label></div>'+
+    '<p class="small muted" style="margin:0">保存後、「自動配置」を押すと実施日と復習日が割り当てられます。</p><div class="acts">'+(id?'<button class="btn danger" data-act="mDel">削除</button>':'')+'<button class="btn" data-act="close">取消し</button><button class="btn pri" data-act="mSave">保存</button></div>');
+}
+function dlgPastItem(st,id){
+  var it=st.pastItems.find(function(x){return x.id===id});if(!it)return;var ps=pastSetOf(st,it.setId),sj=ps&&subjById(st,ps.subjectId);
+  M={type:"pastItem",id:id};
+  var dn=it.date&&getCheck(it.date,"past:"+it.id);
+  openModal('<h3>'+esc((sj?sj.name:"")+" 過去問 第"+it.no+"回")+'</h3><div class="fgrid"><label class="f">実施日<input class="in" type="date" id="x-date" value="'+esc(it.date||"")+'"></label><label class="f">復習日<input class="in" type="date" id="x-rdate" value="'+esc(it.reviewDate||"")+'"></label><label class="f">得点（任意）<input class="in" id="x-score" value="'+esc(it.score||"")+'"></label>'+
+    '<label class="f">状態<span style="font-size:14px;font-weight:400;color:var(--ink);padding-top:10px">'+(dn?"実施済":"未実施")+(it.fixed?"・手動で固定":"")+'</span></label></div><p class="small muted" style="margin:0">日付を変更すると、この回は固定され、自動配置の対象外になります。</p>'+
+    '<div class="acts">'+(it.fixed?'<button class="btn" data-act="unfix">固定を解除</button>':'')+'<button class="btn" data-act="close">取消し</button><button class="btn pri" data-act="mSave">保存</button></div>');
+}
+function dlgCell(st,mid,d){
+  var m=st.materials.find(function(x){return x.id===mid});if(!m)return;var rec=getRec(d,mid),i=rec?rec.round:Math.max(0,curRound(m,d)),done=doneIn(m,i,d);
+  var from=rec?rec.from:num(m.startPage,1)+done,pl=planNew(st,m,d);
+  M={type:"cell",mid:mid,date:d};
+  openModal('<h3>'+esc(m.name)+'　'+fmtY(d)+'（'+WD[dow(d)]+'）の記録</h3><div class="fgrid"><label class="f">周回<select class="in" id="x-round">'+m.rounds.map(function(r,k){return'<option value="'+k+'"'+(k===i?" selected":"")+'>'+(k+1)+'周目</option>'}).join("")+'</select></label><span></span>'+
+    '<label class="f">開始ページ<input class="in" type="number" inputmode="numeric" id="x-from" value="'+from+'"></label><label class="f">到達ページ<input class="in" type="number" inputmode="numeric" id="x-to" value="'+(rec?rec.to:"")+'" placeholder="'+(pl?pl.to:"")+'"></label><label class="f">実施時間（分・任意）<input class="in" type="number" inputmode="numeric" id="x-min" value="'+(rec&&rec.min?rec.min:"")+'"></label></div>'+
+    (pl&&!rec?'<p class="small muted" style="margin:0">この日の計画：p.'+pl.from+'–'+pl.to+'（'+pl.pages+'p）</p>':'')+
+    '<div class="acts">'+(rec?'<button class="btn danger" data-act="mDel">記録を削除</button>':'')+'<button class="btn" data-act="close">取消し</button><button class="btn pri" data-act="mSave">保存</button></div>');
+}
+function dlgStudent(){
+  M={type:"student"};
+  openModal('<h3>生徒の追加</h3><label class="f">氏名<input class="in" id="x-name" placeholder="例：山田 花子"></label><p class="small muted" style="margin:0">国語・数学・英語・理科・社会の5科目と、曜日別の標準学習時間（平日120分、土日300分）が初期設定されます。</p><div class="acts"><button class="btn" data-act="close">取消し</button><button class="btn pri" data-act="mSave">追加</button></div>');
+}
+function modalSave(){
+  var st=stu();
+  if(M.type==="student"){var n=mval("x-name").trim();if(!n){toast("氏名を入力してください。");return}var s=newStudent(n);S.sid=s.id;lsSet("gp-sid",s.id);closeModal();Store.saveStudent(s);Store.watchLogs();S.tab="settings";render();return}
+  if(!st)return;
+  if(M.type==="exam"){var name=mval("x-name").trim(),date=mval("x-date");if(!name||!date){toast("名称と受験日を入力してください。");return}
+    var e=examById(st,M.id);if(!e){e={id:M.id};st.exams.push(e)}e.name=name;e.kind=mval("x-kind").trim();e.date=date}
+  if(M.type==="mock"){var n2=mval("x-name").trim(),d2=mval("x-date");if(!n2||!d2){toast("名称と実施日を入力してください。");return}
+    var m=st.mocks.find(function(x){return x.id===M.id});if(!m){m={id:M.id};st.mocks.push(m)}
+    m.name=n2;m.date=d2;m.reviewMin=num(mval("x-rmin"),120);resetMemo();var rd=mval("x-rdate");m.reviewDate=rd||nextStudy(st,d2)}
+  if(M.type==="pastSet"){var p=pastSetOf(st,M.id);if(!p){p={id:M.id};st.pastSets.push(p)}
+    p.subjectId=mval("x-subj");p.examId=mval("x-exam");p.count=Math.max(1,Math.min(30,num(mval("x-count"),5)));p.min=num(mval("x-min"),50);p.reviewMin=num(mval("x-rmin"),30);p.start=mval("x-start");p.end=mval("x-end")}
+  if(M.type==="pastItem"){var it=st.pastItems.find(function(x){return x.id===M.id});var nd=mval("x-date"),nr=mval("x-rdate");
+    if(nd!==it.date||nr!==it.reviewDate)it.fixed=true;it.date=nd;it.reviewDate=nr;it.score=mval("x-score")}
+  if(M.type==="cell"){var mt=st.materials.find(function(x){return x.id===M.mid}),fr=num(mval("x-from"),0),to=num(mval("x-to"),NaN);
+    if(!isFinite(to)||to<fr){toast("到達ページは開始ページ以上の数値で入力してください。");return}
+    Store.patchLog(st.id,M.date,"recs",M.date+"|"+M.mid,{round:num(mval("x-round"),0),from:fr,to:to,pages:to-fr+1,min:num(mval("x-min"),0)||null});closeModal();render();return}
+  closeModal();save(st);
+}
+function modalDelete(){
+  var st=stu();if(!st)return;
+  if(M.type==="cell"){Store.patchLog(st.id,M.date,"recs",M.date+"|"+M.mid,null);closeModal();render();return}
+  var t=M.type,id=M.id;
+  var label={exam:"この受験",mock:"この模試",pastSet:"この過去問の設定と配置済みの日程"}[t];
+  confirmBox(label+"を削除します。元に戻せません。","削除する",function(){
+    if(t==="exam"){st.exams=st.exams.filter(function(x){return x.id!==id});st.materials.forEach(function(m){if(m.examId===id)m.examId=""})}
+    if(t==="mock")st.mocks=st.mocks.filter(function(x){return x.id!==id});
+    if(t==="pastSet"){st.pastSets=st.pastSets.filter(function(x){return x.id!==id});st.pastItems=st.pastItems.filter(function(x){return x.setId!==id})}
+    closeModal();save(st)});
+}
+
+/* ========== 操作 ========== */
+function newDraft(st){
+  var t=todayS();return{id:"m"+uid(),name:"",subjectId:st.subjects[0]?st.subjects[0].id:"",examId:"",total:200,startPage:1,mpp:2,method:"A",rounds:[{start:t,end:"",ppd:""},{start:"",end:"",ppd:""},{start:"",end:"",ppd:""}]};
+}
+function draftCalc(){var st=stu(),m=S.draft;if(!st||!m)return;resetMemo();var tb=document.getElementById("rtb"),sm=document.getElementById("msum");
+  // 既存入力のフォーカスを保つため、算出列と要約だけを更新する
+  m.rounds.forEach(function(r,i){var rc=roundCalc(st,m,i),tr=tb&&tb.rows[i];if(!tr)return;
+    tr.cells[4].textContent=rc.ok?rc.days+"日":"—";tr.cells[5].textContent=rc.ok?(m.method==="B"?fmtY(rc.end):rc.ppd+" p/日"):"—";tr.cells[6].textContent=rc.ok?Math.round(rc.ppd*mppOf(m,i))+"分":"—"});
+  if(sm)sm.innerHTML=matSummary(st,m);
+}
+function chainStarts(st,m,from){ // 次周回の開始日の初期値＝前周回終了日の翌学習日
+  resetMemo();for(var i=Math.max(1,from);i<m.rounds.length;i++){var prev=roundCalc(st,m,i-1);if(prev.ok&&!m.rounds[i].start){m.rounds[i].start=nextStudy(st,prev.end);resetMemo()}}
+}
+function splitEven(st,m){
+  var ex=targetExam(st,m);if(!ex){toast("先に受験日を登録してください。");return false}
+  var start=m.rounds[0]&&m.rounds[0].start||todayS(),end=addD(ex.date,-1);resetMemo();
+  var days=[],d=start,g=0;while(d<=end&&g<1500){if(isStudy(st,d))days.push(d);d=addD(d,1);g++}
+  var n=m.rounds.length;if(days.length<n){toast("目標受験日までの学習日が足りません。");return false}
+  for(var i=0;i<n;i++){var a=Math.floor(days.length*i/n),b=Math.floor(days.length*(i+1)/n)-1;m.rounds[i].start=days[a];
+    if(m.method==="B")m.rounds[i].ppd=Math.ceil(num(m.total,1)/(b-a+1));else m.rounds[i].end=days[b]}
+  return true;
+}
+var A={
+  tab:function(el){S.tab=el.dataset.v;lsSet("gp-tab",S.tab);if(S.tab==="today")S.date=todayS();render();document.getElementById("main")&&(document.getElementById("main").scrollTop=0)},
+  view:function(el){S.view=el.dataset.v;S.ganttScroll=null;render();A.toToday()},
+  toToday:function(){var g=document.getElementById("gscroll"),st=stu();if(!g||!st)return;var R=ganttRange(st);g.scrollLeft=Math.max(0,diffD(R.lo,todayS())*CW[S.view]-120)},
+  day:function(el){var v=+el.dataset.v;S.date=v===0?todayS():addD(S.date,v);render()},
+  avail:function(el){var st=stu(),d=S.date,cur=availMin(st,d);if(st.holidays[d]||isMockDay(st,d)){toast("休止日・模試日は学習時間を設定できません。");return}st.overrides[d]=Math.max(0,cur+(+el.dataset.v));save(st)},
+  availReset:function(){var st=stu();delete st.overrides[S.date];save(st)},
+  check:function(el){var st=stu(),k=el.dataset.k,d=S.date;Store.patchLog(st.id,d,"checks",d+"|"+k,!getCheck(d,k));render()},
+  done:function(el){var st=stu(),d=S.date,m=st.materials.find(function(x){return x.id===el.dataset.id}),rec=getRec(d,m.id);
+    if(rec){Store.patchLog(st.id,d,"recs",d+"|"+m.id,null);render();return}
+    var P=dayPlan(st,d),x=null;P.subs.forEach(function(s){s.items.forEach(function(i){if(i.m.id===m.id)x=i})});
+    if(!x||!x.plan||!x.pages)return;Store.patchLog(st.id,d,"recs",d+"|"+m.id,{round:x.plan.round,from:x.from,to:x.to,pages:x.pages});render()},
+  cell:function(el,ev){var st=stu(),R=ganttRange(st),rect=el.getBoundingClientRect(),i=Math.floor((ev.clientX-rect.left)/CW[S.view]);dlgCell(st,el.dataset.id,addD(R.lo,Math.max(0,i)))},
+  editMat:function(el){var st=stu(),m=st.materials.find(function(x){return x.id===el.dataset.id});if(!m)return;S.matSel=m.id;S.draft=clone(m);S.tab="mats";lsSet("gp-tab","mats");render()},
+  newMat:function(){var st=stu();if(!st.subjects.length){toast("先に設定画面で科目を追加してください。");return}S.matSel=null;S.draft=newDraft(st);render()},
+  cancelMat:function(){S.draft=null;S.matSel=null;render()},
+  adjust:function(el){var st=stu(),id=el.dataset.id;S.adj=id;S.tab="mats";lsSet("gp-tab","mats");
+    S.adjP={k:7,cut:1,newEnd:"",plus:0,unhol:false,low:"",pset:"",pcut:1};
+    var m=st.materials.find(function(x){return x.id===id});resetMemo();var i=curRound(m,todayS());
+    if(i>=0){var rc=roundCalc(st,m,i),need=0,base=clone(st),x;normalize(base);
+      resetMemo();
+      studyDays(st,todayS(),rc.end).forEach(function(d){var pl=planNew(st,m,d);if(!pl)return;var tl=plannedLoad(st,d,id)+pl.min*(1+st.reviewRate/100);need=Math.max(need,tl-availMin(st,d))});
+      S.adjP.plus=Math.max(10,Math.ceil(need/10)*10)}
+    render();var mn=document.getElementById("main");if(mn)mn.scrollTop=0},
+  adjClose:function(){S.adj=null;render()},
+  adjApply:function(el){var st=stu(),k=el.dataset.k,o=(S.adjCache||[]).find(function(x){return x.k===k});if(!o)return;var r=o.b();if(!r.st){toast(r.err||"反映できません。");return}
+    confirmBox("「"+o.t+"」を計画に反映します。教材・日程の設定が変更されます。","反映する",function(){closeModal();S.adj=null;S.draft=null;Store.saveStudent(r.st);S.tab="gantt";lsSet("gp-tab","gantt");render();toast("「"+o.t+"」を反映しました。")})},
+  rounds:function(el){var st=stu(),m=S.draft,n=+el.dataset.v;while(m.rounds.length<n){var lr=m.rounds[m.rounds.length-1];m.rounds.push({start:"",end:"",ppd:"",mpp:lr&&lr.mpp!=null?lr.mpp:""})}m.rounds=m.rounds.slice(0,n);chainStarts(st,m,1);render()},
+  method:function(el){var st=stu(),m=S.draft;if(m.method===el.dataset.v)return;resetMemo();
+    m.rounds.forEach(function(r,i){var rc=roundCalc(st,m,i);if(rc.ok){if(el.dataset.v==="B")r.ppd=rc.ppd;else r.end=rc.end}});m.method=el.dataset.v;render()},
+  split:function(){var st=stu();if(splitEven(st,S.draft))render()},
+  saveMat:function(){var st=stu(),m=S.draft;if(!m.name.trim()){toast("教材名を入力してください。");return}if(!(num(m.total,0)>0)){toast("総ページ数を入力してください。");return}
+    m.total=num(m.total,1);m.startPage=num(m.startPage,1);m.mpp=num(m.mpp,1);m.rounds.forEach(function(r){var v=num(r.mpp,NaN);r.mpp=isFinite(v)&&v>0?v:""});
+    var i=st.materials.findIndex(function(x){return x.id===m.id});if(i>=0)st.materials[i]=clone(m);else st.materials.push(clone(m));
+    S.matSel=m.id;save(st);toast("保存しました。")},
+  delMat:function(){var st=stu(),id=S.draft.id;confirmBox("この教材と計画を削除します。記録は残りますが表示されなくなります。","削除する",function(){st.materials=st.materials.filter(function(x){return x.id!==id});S.draft=null;S.matSel=null;closeModal();save(st)})},
+  exam:function(el){dlgExam(stu(),el.dataset.id)},mock:function(el){dlgMock(stu(),el.dataset.id)},pastSet:function(el){dlgPastSet(stu(),el.dataset.id)},pastItem:function(el){dlgPastItem(stu(),el.dataset.id)},
+  autoPlace:function(){var st=stu();resetMemo();var miss=autoPlace(st);save(st);toast(miss?"配置できなかった回が"+miss+"回あります。配置期間又は1日上限を見直してください。":"過去問の実施日と復習日を配置しました。")},
+  unfix:function(){var st=stu(),it=st.pastItems.find(function(x){return x.id===M.id});it.fixed=false;closeModal();save(st);toast("固定を解除しました。次回の自動配置で再配置されます。")},
+  calM:function(el){var d=pd(S.calMonth+"-01");d.setMonth(d.getMonth()+(+el.dataset.v));S.calMonth=ds(d).slice(0,7);render()},
+  holM:function(el){var d=pd(S.holMonth+"-01");d.setMonth(d.getMonth()+(+el.dataset.v));S.holMonth=ds(d).slice(0,7);render()},
+  hol:function(el){var st=stu(),k=el.dataset.v;if(st.holidays[k])delete st.holidays[k];else st.holidays[k]=true;save(st)},
+  addStudent:function(){dlgStudent()},
+  pickStu:function(el){S.sid=el.dataset.id;lsSet("gp-sid",S.sid);S.draft=null;Store.watchLogs();render()},
+  delStudent:function(){var st=stu();confirmBox("「"+st.name+"」の設定と記録をすべて削除します。元に戻せません。","削除する",function(){Store.deleteStudent(st.id);S.sid=orderedIds()[0]||null;lsSet("gp-sid",S.sid||"");closeModal();Store.watchLogs();render()})},
+  addSubj:function(){var st=stu();st.subjects.push({id:"j"+uid(),name:"新しい科目",color:PALETTE[st.subjects.length%PALETTE.length],prio:"中"});save(st)},
+  prio:function(el){var st=stu(),s=subjById(st,el.dataset.id);s.prio=el.dataset.v;save(st)},
+  subjUp:function(el){var st=stu(),i=st.subjects.findIndex(function(x){return x.id===el.dataset.id});if(i>0){var t=st.subjects[i-1];st.subjects[i-1]=st.subjects[i];st.subjects[i]=t;save(st)}},
+  delSubj:function(el){var st=stu(),id=el.dataset.id,n=st.materials.filter(function(m){return m.subjectId===id}).length;
+    confirmBox(n?"この科目と教材"+n+"件を削除します。元に戻せません。":"この科目を削除します。","削除する",function(){st.subjects=st.subjects.filter(function(x){return x.id!==id});st.materials=st.materials.filter(function(m){return m.subjectId!==id});closeModal();save(st)})},
+  export:function(){var st=stu();if(!S.dl)return;var data={app:"study-planner",version:1,exportedAt:new Date().toISOString(),student:st,logs:S.logs[st.id]||{}};
+    S.dl.save({filename:"学習プランナー_"+st.name+"_"+todayS()+".json",data:JSON.stringify(data,null,1)}).then(function(){st.lastExport=todayS();save(st);toast("書き出しました。")}).catch(function(e){if(e&&e.code!=="declined")toast("書き出せませんでした。")})},
+  import:function(){document.getElementById("importFile").click()},
+  print:function(){printFile()},
+  loadSample:function(){var o=SAMPLE;if(!S.students[o.student.id]){var st=clone(o.student);normalize(st);Store.saveStudent(st);Object.keys(o.logs).forEach(function(mo){Store.putMonth(st.id,mo,clone(o.logs[mo]))})}
+    S.sid=o.student.id;lsSet("gp-sid",S.sid);S.tab="gantt";render();toast("サンプルデータを読み込みました。設定画面から削除できます。")},
+  close:function(){closeModal()},maskClose:function(el,ev){if(ev.target===el)closeModal()},
+  mSave:function(){modalSave()},mDel:function(){modalDelete()},mOk:function(){M&&M.ok&&M.ok()}
+};
+document.addEventListener("click",function(ev){
+  var el=ev.target.closest("[data-act]");if(!el)return;
+  if(el.dataset.act==="cell"&&ev.target.closest(".bar"))return;
+  var fn=A[el.dataset.act];if(fn){ev.preventDefault();fn(el,ev)}
+});
+document.addEventListener("input",function(ev){
+  var el=ev.target;if(!S.draft||!el.closest("#main"))return;
+  if(el.dataset.d){S.draft[el.dataset.d]=el.value;draftCalc()}
+  if(el.dataset.r!=null){S.draft.rounds[+el.dataset.r][el.dataset.k]=el.value;draftCalc()}
+});
+document.addEventListener("change",function(ev){
+  var el=ev.target,st=stu(),k=el.dataset.chg;
+  if(S.draft&&el.dataset.r!=null){chainStarts(st,S.draft,+el.dataset.r+1);render();return}
+  if(el.dataset.adj){S.adjP[el.dataset.adj]=el.type==="checkbox"?el.checked:el.value;render();return}
+  if(!k)return;
+  if(k==="stu"){S.sid=el.value;lsSet("gp-sid",S.sid);S.draft=null;Store.watchLogs();render();return}
+  if(!st)return;
+  if(k==="stuName"){var n=el.value.trim();if(n){st.name=n;save(st)}return}
+  if(k==="num"){var v=num(el.value,null);if(v!=null&&v>=0){st[el.dataset.k]=v;save(st)}return}
+  if(k==="week"){var w=num(el.value,null);if(w!=null&&w>=0){st.weekMin[+el.dataset.k]=w;save(st)}return}
+  if(k==="subj"){var s=subjById(st,el.dataset.id);if(s){var val=el.value.trim();if(val){s[el.dataset.k]=val;save(st)}}return}
+  if(k==="reach"){var d=S.date,m=st.materials.find(function(x){return x.id===el.dataset.id}),to=num(el.value,NaN);
+    if(el.value===""){Store.patchLog(st.id,d,"recs",d+"|"+m.id,null);render();return}
+    var i=Math.max(0,curRound(m,d)),rec=getRec(d,m.id);if(rec)i=rec.round;var from=rec?rec.from:num(m.startPage,1)+doneIn(m,i,d);
+    if(!isFinite(to)||to<from){toast("到達ページは p."+from+" 以上で入力してください。");render();return}
+    Store.patchLog(st.id,d,"recs",d+"|"+m.id,{round:i,from:from,to:to,pages:to-from+1,min:rec&&rec.min||null});render()}
+  if(k==="recmin"){var d2=S.date,m2=st.materials.find(function(x){return x.id===el.dataset.id}),r2=getRec(d2,m2.id);if(!r2){toast("先にページを記録してください。");return}
+    var mn=num(el.value,0);var nr=clone(r2);nr.min=mn>0?mn:null;Store.patchLog(st.id,d2,"recs",d2+"|"+m2.id,nr);render();return}
+});
+document.addEventListener("keydown",function(ev){if(ev.key==="Escape"&&modal.innerHTML)closeModal()});
+document.getElementById("importFile").addEventListener("change",function(ev){
+  var f=ev.target.files[0];ev.target.value="";if(!f)return;var rd=new FileReader();
+  rd.onload=function(){try{var o=JSON.parse(rd.result);if(o.app!=="study-planner"||!o.student||!o.student.id)throw 0;
+    var exists=!!S.students[o.student.id];
+    var go=function(){normalize(o.student);Store.saveStudent(o.student);Object.keys(o.logs||{}).forEach(function(mo){Store.putMonth(o.student.id,mo,o.logs[mo])});S.sid=o.student.id;lsSet("gp-sid",S.sid);closeModal();Store.watching=null;Store.watchLogs();render();toast("「"+o.student.name+"」を読み込みました。")};
+    if(exists)confirmBox("「"+o.student.name+"」の現在のデータを、ファイルの内容で置き換えます。","置き換える",go);else go();
+  }catch(e){toast("学習プランナーのバックアップファイルではありません。")}};rd.readAsText(f);
+});
+
+/* ========== 印刷 ========== */
+function printFile(){
+  var st=stu();if(!st)return;var titles={gantt:"ガントチャート",today:"今日の計画（"+fmtY(S.date)+"）",exams:"試験日程"};
+  var ph=document.getElementById("printHead");ph.innerHTML='<b>'+esc(st.name)+'　'+esc(titles[S.tab]||"")+'</b><span>作成日 '+fmtY(todayS())+'</span>';
+  var prev=S.view;if(S.tab==="gantt"&&S.view==="day"){S.view="week";S.ganttScroll=null;render();ph=document.getElementById("printHead")}
+  var inner=document.querySelector(".g-inner");if(inner&&S.tab==="gantt"){var w=parseInt(inner.style.width,10)||1000;inner.style.zoom=Math.min(1,1060/w).toFixed(3)}
+  setTimeout(function(){window.print();setTimeout(function(){if(inner)inner.style.zoom="";if(S.view!==prev){S.view=prev;render()}},800)},80);
+}
+
+function afterRender(st){
+  if(S.tab==="gantt"){var g=document.getElementById("gscroll");if(!g)return;
+    var sv=S.ganttScroll;if(sv&&sv.view===S.view&&sv.sid===S.sid){g.scrollLeft=sv.l;g.scrollTop=sv.t}else A.toToday()}
+}
+
+/* ========== 起動 ========== */
+S.mode="loading";
+var started=false;
+function start(){if(started)return;started=true;Store.init()}
+start();
+if("serviceWorker" in navigator&&/^https?:/.test(location.protocol)){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
+})();
+</script>
+
+</body>
+</html>
