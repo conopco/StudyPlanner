@@ -548,7 +548,7 @@ function nav(){
 }
 function noStudent(){
   return'<div class="empty"><h2>生徒を登録してください</h2><p>生徒を登録すると、国語・数学・英語・理科・社会の5科目が初期設定されます。</p><p><button class="btn pri" data-act="addStudent">生徒を追加</button></p>'+
-    '<p><button class="btn" data-act="loadSample">サンプルデータで試す</button></p><p class="small">データはこの端末のブラウザ内に保存されます。設定画面から定期的に書き出してください。</p></div>';
+    '<p><button class="btn" data-act="loadSample">サンプルデータで試す</button>　<a class="btn" href="manual.html" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)">マニュアル</a></p><p class="small">データはこの端末のブラウザ内に保存されます。設定画面から定期的に書き出してください。</p></div>';
 }
 function body(st){
   var b=backupNote(st);
@@ -781,7 +781,7 @@ function viewSettings(st){
   hol+='</div><div class="small muted" style="margin-top:6px">登録済みの休止日：'+cnt+'日</div></div>';
   var bk='<div class="card"><span class="h2">バックアップ</span><p class="small muted" style="margin:6px 0 10px">この生徒の設定と記録をJSONファイルに書き出し、又は読み込みます。'+(st.lastExport?"最終書出し："+fmtY(st.lastExport):"まだ書き出していません。")+'</p><div class="row">'+
     (S.dl?'<button class="btn dark" data-act="export">書出し</button>':'<span class="small muted">この表示ではファイルを保存できません。</span>')+'<button class="btn" data-act="import">読込み</button></div></div>';
-  return'<div class="grid2"><div class="stack">'+studs+gen+subs+'</div><div class="stack">'+wk+hol+bk+'</div></div>';
+  return'<div class="grid2"><div class="stack">'+studs+gen+subs+'</div><div class="stack">'+wk+hol+bk+'<div class="card"><span class="h2">使い方</span><p class="small muted" style="margin:6px 0 10px">操作手順と計算の仕組みを説明しています。</p><a class="btn" href="manual.html" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)">マニュアルを開く</a></div></div></div>';
 }
 
 /* ========== モーダル ========== */
