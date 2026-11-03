@@ -132,6 +132,16 @@ input[type=color].in{padding:2px;width:52px}
 .reach{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);grid-column:2 / -1}
 .reach input{width:84px;min-height:36px}
 
+/* Today calendar */
+.tcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;margin-top:6px}
+.tcal .hd{font-size:11px;color:var(--muted);text-align:center}
+.tc{position:relative;height:40px;border:0;border-radius:8px;background:transparent;font-size:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;padding:0}
+.tc.off{opacity:.45}
+.tc.td{box-shadow:inset 0 0 0 2px var(--today)}
+.tc.on{background:var(--ink);color:var(--bg);font-weight:700}
+.tc .rd{width:5px;height:5px;border-radius:50%;background:var(--accent);margin-top:2px}
+.tc.on .rd{background:var(--bg)}
+.tc .mk{font-style:normal;font-size:9px;font-weight:700;margin-top:1px}
 /* Calendar */
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .cal .hd{font-size:11px;color:var(--muted);text-align:center}
@@ -208,6 +218,7 @@ function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 var SAMPLE={"student":{"id":"sample01","name":"サンプル生徒（削除可）","created":"2026-11-04T00:00:00Z","weekMin":[360,180,180,180,180,180,360],"reviewRate":30,"pastLimit":1,"exams":[{"id":"eA","name":"A高校","kind":"第二志望","date":"2027-01-17"},{"id":"eB","name":"B高校","kind":"第一志望","date":"2027-02-01"}],"subjects":[{"id":"jkok","name":"国語","color":"#C2410C","prio":"中"},{"id":"jsug","name":"数学","color":"#1D4ED8","prio":"高"},{"id":"jeng","name":"英語","color":"#7C3AED","prio":"中"},{"id":"jrik","name":"理科","color":"#0F766E","prio":"中"},{"id":"jsha","name":"社会","color":"#A16207","prio":"低"}],"materials":[{"id":"mkok1","subjectId":"jkok","name":"現代文 問題集","examId":"eB","total":240,"startPage":1,"mpp":3,"method":"A","rounds":[{"start":"2026-10-19","end":"2026-11-07","ppd":""},{"start":"2026-11-08","end":"2026-12-06","ppd":""},{"start":"2026-12-07","end":"2027-01-04","ppd":""},{"start":"2027-01-05","end":"2027-01-25","ppd":""}]},{"id":"msug1","subjectId":"jsug","name":"計算ドリル","examId":"eB","total":100,"startPage":1,"mpp":3,"method":"A","rounds":[{"start":"2026-10-19","end":"2026-11-01","ppd":""},{"start":"2026-11-02","end":"2026-11-14","ppd":""},{"start":"2026-11-16","end":"2026-11-29","ppd":""},{"start":"2026-11-30","end":"2026-12-12","ppd":""},{"start":"2026-12-14","end":"2026-12-27","ppd":""}]},{"id":"msug2","subjectId":"jsug","name":"問題集B","examId":"eB","total":300,"startPage":1,"mpp":3,"method":"A","rounds":[{"start":"2026-11-10","end":"2026-12-09","ppd":""},{"start":"2026-12-10","end":"2026-12-31","ppd":""},{"start":"2027-01-01","end":"2027-01-20","ppd":""}]},{"id":"meng1","subjectId":"jeng","name":"英単語帳","examId":"eB","total":200,"startPage":1,"mpp":1,"method":"A","rounds":[{"start":"2026-10-19","end":"2026-11-01","ppd":""},{"start":"2026-11-02","end":"2026-11-14","ppd":""},{"start":"2026-11-16","end":"2026-11-29","ppd":""}]},{"id":"meng2","subjectId":"jeng","name":"長文問題集","examId":"eB","total":180,"startPage":1,"mpp":3,"method":"A","rounds":[{"start":"2026-11-16","end":"2026-12-12","ppd":""},{"start":"2026-12-14","end":"2027-01-05","ppd":""},{"start":"2027-01-06","end":"2027-01-25","ppd":""}]},{"id":"mrik1","subjectId":"jrik","name":"物理 問題集","examId":"eA","total":200,"startPage":1,"mpp":2,"method":"A","rounds":[{"start":"2026-10-19","end":"2026-11-12","ppd":""},{"start":"2026-11-13","end":"2026-12-10","ppd":""},{"start":"2026-12-11","end":"2027-01-10","ppd":""}]},{"id":"msha1","subjectId":"jsha","name":"日本史 一問一答","examId":"eA","total":220,"startPage":1,"mpp":2,"method":"A","rounds":[{"start":"2026-10-19","end":"2026-11-05","ppd":""},{"start":"2026-11-06","end":"2026-12-05","ppd":""},{"start":"2026-12-06","end":"2027-01-10","ppd":""}]}],"holidays":{"2026-11-03":true,"2026-11-23":true},"overrides":{},"mocks":[{"id":"k1","name":"第1回 総合模試","date":"2026-10-18","reviewDate":"2026-10-19","reviewMin":120},{"id":"k2","name":"第2回 総合模試","date":"2026-11-15","reviewDate":"2026-11-16","reviewMin":120},{"id":"k3","name":"第3回 総合模試","date":"2026-12-13","reviewDate":"2026-12-14","reviewMin":120}],"pastSets":[{"id":"q1","examId":"eB","subjectId":"jkok","count":5,"min":50,"reviewMin":30,"start":"","end":""},{"id":"q2","examId":"eB","subjectId":"jsug","count":5,"min":50,"reviewMin":40,"start":"","end":""},{"id":"q3","examId":"eB","subjectId":"jeng","count":5,"min":50,"reviewMin":30,"start":"","end":""},{"id":"q4","examId":"eA","subjectId":"jrik","count":3,"min":40,"reviewMin":20,"start":"","end":""},{"id":"q5","examId":"eA","subjectId":"jsha","count":3,"min":40,"reviewMin":20,"start":"","end":""}],"pastItems":[{"id":"pj45wnh2bdy2","setId":"q1","no":1,"date":"2026-11-07","reviewDate":"2026-11-08","fixed":false,"score":""},{"id":"p6lq6cm4bdy2","setId":"q2","no":1,"date":"2026-11-14","reviewDate":"2026-11-17","fixed":false,"score":""},{"id":"pfgcgc4ybdy2","setId":"q3","no":1,"date":"2026-11-21","reviewDate":"2026-11-22","fixed":false,"score":""},{"id":"pteeoatnbdy3","setId":"q4","no":1,"date":"2026-10-24","reviewDate":"2026-10-25","fixed":false,"score":""},{"id":"pxp2z7o1bdy3","setId":"q5","no":1,"date":"2026-10-31","reviewDate":"2026-11-01","fixed":false,"score":""},{"id":"p50uzf5bbdy3","setId":"q1","no":2,"date":"2026-11-28","reviewDate":"2026-11-29","fixed":false,"score":""},{"id":"pcc0q722bdy4","setId":"q2","no":2,"date":"2026-12-05","reviewDate":"2026-12-06","fixed":false,"score":""},{"id":"p99mxuombdy6","setId":"q3","no":2,"date":"2026-12-07","reviewDate":"2026-12-08","fixed":false,"score":""},{"id":"pmarmagpbdy6","setId":"q4","no":2,"date":"2026-12-19","reviewDate":"2026-12-20","fixed":false,"score":""},{"id":"pb7vzz7jbdy7","setId":"q5","no":2,"date":"2026-11-22","reviewDate":"2026-11-24","fixed":false,"score":""},{"id":"pr4riw1pbdy7","setId":"q1","no":3,"date":"2026-12-26","reviewDate":"2026-12-27","fixed":false,"score":""},{"id":"pgdnqprybdy7","setId":"q2","no":3,"date":"2026-12-28","reviewDate":"2026-12-29","fixed":false,"score":""},{"id":"p2hcuv2nbdy7","setId":"q3","no":3,"date":"2026-12-12","reviewDate":"2026-12-15","fixed":false,"score":""},{"id":"pn9lyk9rbdy7","setId":"q4","no":3,"date":"2027-01-09","reviewDate":"2027-01-10","fixed":false,"score":""},{"id":"pba0qa1qbdy8","setId":"q5","no":3,"date":"2027-01-11","reviewDate":"2027-01-12","fixed":false,"score":""},{"id":"pn590kpxbdy8","setId":"q1","no":4,"date":"2027-01-02","reviewDate":"2027-01-03","fixed":false,"score":""},{"id":"p9ocrx7ubdy8","setId":"q2","no":4,"date":"2027-01-10","reviewDate":"2027-01-11","fixed":false,"score":""},{"id":"pb36d9ejbdy8","setId":"q3","no":4,"date":"2027-01-12","reviewDate":"2027-01-13","fixed":false,"score":""},{"id":"pk34yty8bdy8","setId":"q1","no":5,"date":"2027-01-23","reviewDate":"2027-01-24","fixed":false,"score":""},{"id":"piitl5k8bdy9","setId":"q2","no":5,"date":"2027-01-30","reviewDate":"2027-01-31","fixed":false,"score":""},{"id":"pymkbes3bdy9","setId":"q3","no":5,"date":"2027-01-24","reviewDate":"2027-01-25","fixed":false,"score":""}],"lastExport":null},"logs":{"2026-10":{"recs":{"2026-10-19|mkok1":{"round":0,"from":1,"to":13,"pages":13},"2026-10-20|mkok1":{"round":0,"from":14,"to":26,"pages":13},"2026-10-21|mkok1":{"round":0,"from":27,"to":39,"pages":13},"2026-10-22|mkok1":{"round":0,"from":40,"to":52,"pages":13},"2026-10-23|mkok1":{"round":0,"from":53,"to":65,"pages":13},"2026-10-24|mkok1":{"round":0,"from":66,"to":78,"pages":13},"2026-10-25|mkok1":{"round":0,"from":79,"to":91,"pages":13},"2026-10-26|mkok1":{"round":0,"from":92,"to":104,"pages":13},"2026-10-27|mkok1":{"round":0,"from":105,"to":117,"pages":13},"2026-10-28|mkok1":{"round":0,"from":118,"to":130,"pages":13},"2026-10-29|mkok1":{"round":0,"from":131,"to":143,"pages":13},"2026-10-19|msug1":{"round":0,"from":1,"to":8,"pages":8},"2026-10-20|msug1":{"round":0,"from":9,"to":16,"pages":8},"2026-10-21|msug1":{"round":0,"from":17,"to":23,"pages":7},"2026-10-22|msug1":{"round":0,"from":24,"to":30,"pages":7},"2026-10-23|msug1":{"round":0,"from":31,"to":37,"pages":7},"2026-10-24|msug1":{"round":0,"from":38,"to":44,"pages":7},"2026-10-25|msug1":{"round":0,"from":45,"to":51,"pages":7},"2026-10-26|msug1":{"round":0,"from":52,"to":58,"pages":7},"2026-10-27|msug1":{"round":0,"from":59,"to":65,"pages":7},"2026-10-28|msug1":{"round":0,"from":66,"to":72,"pages":7},"2026-10-29|msug1":{"round":0,"from":73,"to":79,"pages":7},"2026-10-30|msug1":{"round":0,"from":80,"to":86,"pages":7},"2026-10-31|msug1":{"round":0,"from":87,"to":93,"pages":7},"2026-10-19|meng1":{"round":0,"from":1,"to":15,"pages":15},"2026-10-20|meng1":{"round":0,"from":16,"to":30,"pages":15},"2026-10-21|meng1":{"round":0,"from":31,"to":45,"pages":15},"2026-10-22|meng1":{"round":0,"from":46,"to":60,"pages":15},"2026-10-23|meng1":{"round":0,"from":61,"to":74,"pages":14},"2026-10-24|meng1":{"round":0,"from":75,"to":88,"pages":14},"2026-10-25|meng1":{"round":0,"from":89,"to":102,"pages":14},"2026-10-26|meng1":{"round":0,"from":103,"to":116,"pages":14},"2026-10-27|meng1":{"round":0,"from":117,"to":130,"pages":14},"2026-10-28|meng1":{"round":0,"from":131,"to":144,"pages":14},"2026-10-29|meng1":{"round":0,"from":145,"to":158,"pages":14},"2026-10-30|meng1":{"round":0,"from":159,"to":172,"pages":14},"2026-10-31|meng1":{"round":0,"from":173,"to":186,"pages":14},"2026-10-19|mrik1":{"round":0,"from":1,"to":9,"pages":9},"2026-10-20|mrik1":{"round":0,"from":10,"to":18,"pages":9},"2026-10-21|mrik1":{"round":0,"from":19,"to":27,"pages":9},"2026-10-22|mrik1":{"round":0,"from":28,"to":36,"pages":9},"2026-10-23|mrik1":{"round":0,"from":37,"to":45,"pages":9},"2026-10-24|mrik1":{"round":0,"from":46,"to":54,"pages":9},"2026-10-25|mrik1":{"round":0,"from":55,"to":63,"pages":9},"2026-10-26|mrik1":{"round":0,"from":64,"to":72,"pages":9},"2026-10-27|mrik1":{"round":0,"from":73,"to":80,"pages":8},"2026-10-28|mrik1":{"round":0,"from":81,"to":88,"pages":8},"2026-10-29|mrik1":{"round":0,"from":89,"to":96,"pages":8},"2026-10-30|mrik1":{"round":0,"from":97,"to":104,"pages":8},"2026-10-31|mrik1":{"round":0,"from":105,"to":112,"pages":8},"2026-10-19|msha1":{"round":0,"from":1,"to":13,"pages":13},"2026-10-20|msha1":{"round":0,"from":14,"to":26,"pages":13},"2026-10-21|msha1":{"round":0,"from":27,"to":39,"pages":13},"2026-10-22|msha1":{"round":0,"from":40,"to":52,"pages":13},"2026-10-23|msha1":{"round":0,"from":53,"to":65,"pages":13},"2026-10-24|msha1":{"round":0,"from":66,"to":78,"pages":13},"2026-10-25|msha1":{"round":0,"from":79,"to":91,"pages":13},"2026-10-26|msha1":{"round":0,"from":92,"to":104,"pages":13},"2026-10-27|msha1":{"round":0,"from":105,"to":117,"pages":13},"2026-10-28|msha1":{"round":0,"from":118,"to":130,"pages":13},"2026-10-29|msha1":{"round":0,"from":131,"to":143,"pages":13},"2026-10-30|msha1":{"round":0,"from":144,"to":156,"pages":13},"2026-10-31|msha1":{"round":0,"from":157,"to":169,"pages":13}},"checks":{"2026-10-18|mock:k1":true,"2026-10-19|mockrev:k1":true}},"2026-11":{"recs":{"2026-11-01|mkok1":{"round":0,"from":144,"to":160,"pages":17},"2026-11-02|mkok1":{"round":0,"from":161,"to":176,"pages":16},"2026-11-01|msug1":{"round":0,"from":94,"to":100,"pages":7},"2026-11-02|msug1":{"round":1,"from":1,"to":9,"pages":9},"2026-11-01|meng1":{"round":0,"from":187,"to":200,"pages":14},"2026-11-02|meng1":{"round":1,"from":1,"to":17,"pages":17},"2026-11-01|mrik1":{"round":0,"from":113,"to":120,"pages":8},"2026-11-02|mrik1":{"round":0,"from":121,"to":128,"pages":8},"2026-11-01|msha1":{"round":0,"from":170,"to":182,"pages":13},"2026-11-02|msha1":{"round":0,"from":183,"to":195,"pages":13}},"checks":{}}}};
 var PALETTE=["#C2410C","#1D4ED8","#7C3AED","#0F766E","#A16207","#BE185D","#4D7C0F","#0369A1","#9F1239","#475569"];
 var PRIO={"高":1.5,"中":1,"低":0.5};
+var PAST_START=60,PAST_END=3; // 過去問の配置期間の初期値（受験日の何日前から何日前まで）
 
 /* ========== 状態 ========== */
 var S={students:{},logs:{},sid:lsGet("gp-sid"),tab:lsGet("gp-tab")||"gantt",view:"day",date:todayS(),
@@ -500,7 +511,7 @@ function autoPlace(st){
   var sets=st.pastSets.slice().sort(function(a,b){return num(b.count,0)-num(a.count,0)});
   var keep=st.pastItems.filter(function(it){return it.fixed&&sets.some(function(s){return s.id===it.setId})});
   var plan={};sets.forEach(function(s){
-    var ex=examById(st,s.examId),end=s.end||(ex?addD(ex.date,-1):null),start=s.start||(ex?addD(ex.date,-90):todayS());
+    var ex=examById(st,s.examId),end=s.end||(ex?addD(ex.date,-PAST_END):null),start=s.start||(ex?addD(ex.date,-PAST_START):todayS());
     var days=[];if(end){var d=start,g=0;while(d<=end&&g<800){if(!blocked(d))days.push(d);d=addD(d,1);g++}}
     plan[s.id]={days:days,n:Math.max(0,num(s.count,0))};
   });
@@ -580,7 +591,7 @@ function viewGantt(st){
     '<button class="btn" data-act="toToday">今日へ移動</button><button class="btn" data-act="tab" data-v="mats">教材を追加</button></div>'+
     '<div class="legend"><span><i class="lg-sw" style="background:color-mix(in srgb,var(--accent) 30%,var(--surface))"></i>計画</span><span><i class="lg-sw" style="background:var(--accent)"></i>実績</span><span><i class="lg-sw hatch" style="border:1px solid var(--line)"></i>休止日・模試日</span><span><i class="lg-sw" style="width:2px;background:var(--today)"></i>今日</span><span><i class="lg-sw" style="width:2px;background:var(--bad)"></i>受験日</span></div></div>';
   // header
-  var hd='<div class="g-row g-head" style="height:46px"><div class="g-lab small muted" style="font-weight:700">科目・教材</div><div class="g-trk" style="width:'+W+'px;height:46px">';
+  var hd='<div class="g-row g-head" style="height:46px"><div class="g-lab small muted" style="font-weight:700">科目・教材</div><div class="g-trk" data-act="hdrDay" title="日付を押すと、その日の今日の計画を表示します" style="width:'+W+'px;height:46px;cursor:pointer">';
   for(var i=0;i<R.n;i++){var d=addD(R.lo,i),dd=pd(d);
     if(dd.getDate()===1||i===0)hd+='<span class="g-mon" style="left:'+(i*cw)+'px">'+(i===0||dd.getMonth()===0?dd.getFullYear()+"年":"")+(dd.getMonth()+1)+'月</span>';
     if(S.view==="day"){var w=dow(d),cls="g-day"+(w===0||w===6?" we":"")+(d===t?" td":"");
@@ -634,7 +645,7 @@ function viewGantt(st){
   st.exams.forEach(function(e){if(e.date<R.lo||e.date>R.hi)return;ov+='<div class="ov" style="left:'+(LW+x(e.date)+cw/2-1)+'px;width:2px;top:18px;bottom:0;background:var(--bad)"></div><div class="ov" style="left:'+(LW+x(e.date)+cw/2+3)+'px;top:'+(top+2)+'px;font-size:11px;font-weight:700;color:var(--bad);white-space:nowrap;background:var(--surface);padding:0 3px;z-index:3">'+esc(e.name)+'</div>'});
   var warn=ganttWarnings(st,R);
   return h+'<div class="g-scroll" id="gscroll"><div class="g-inner" style="width:'+(LW+W)+'px">'+hd+evr+rows+ld+ov+'</div></div>'+
-    '<div class="row" style="margin-top:10px">'+warn+'<span class="small muted no-print">バーをタップ：教材の編集　／　行の日付部分をタップ：その日の記録を入力</span></div>';
+    '<div class="row" style="margin-top:10px">'+warn+'<span class="small muted no-print">バーをタップ：教材の編集　／　行の日付部分をタップ：その日の記録を入力　／　日付の見出しをタップ：その日の「今日の計画」を表示</span></div>';
 }
 function w0(d){return dow(d)===1}
 function ganttWarnings(st,R){
@@ -646,7 +657,7 @@ function ganttWarnings(st,R){
 /* --- 今日の計画 --- */
 function viewToday(st){
   var d=S.date,P=dayPlan(st,d),isT=d===todayS();
-  var left='<section class="stack"><div><div class="row"><button class="sq" data-act="day" data-v="-1" aria-label="前の日">‹</button><span class="big">'+fmtY(d)+"（"+WD[dow(d)]+'）</span><button class="sq" data-act="day" data-v="1" aria-label="次の日">›</button>'+(isT?"":'<button class="btn sm" data-act="day" data-v="0">今日</button>')+'</div>'+
+  var left='<section class="stack">'+todayCal(st,d)+'<div><div class="row"><button class="sq" data-act="day" data-v="-1" aria-label="前の日">‹</button><span class="big">'+fmtY(d)+"（"+WD[dow(d)]+'）</span><button class="sq" data-act="day" data-v="1" aria-label="次の日">›</button>'+(isT?"":'<button class="btn sm" data-act="day" data-v="0">今日</button>')+'</div>'+
     '<div class="small muted" style="margin-top:4px">'+(P.mockDay?"模試の実施日です。":(prevStudy(st,d)?"前学習日："+fmtW(prevStudy(st,d)):""))+(st.holidays[d]?"　この日は休止日です。":"")+'</div></div>';
   left+='<div class="card"><label for="availIn" class="h2" style="font-size:14px">この日の学習可能時間</label><div class="stepper" style="margin-top:8px"><button class="sq" data-act="avail" data-v="-10" aria-label="10分減らす">−</button><div class="val"><span id="availIn">'+P.avail+'</span><small> 分</small></div><button class="sq" data-act="avail" data-v="10" aria-label="10分増やす">＋</button></div>'+
     '<div class="small muted" style="text-align:center;margin-top:6px">'+WD[dow(d)]+'曜日の標準 '+st.weekMin[dow(d)]+'分'+(st.overrides[d]!=null?'　<button class="btn sm" data-act="availReset">標準に戻す</button>':'')+'</div></div>';
@@ -677,6 +688,19 @@ function viewToday(st){
   return'<div class="today-wrap">'+left+right+'</div>';
 }
 
+function todayCal(st,sel){
+  var mo=S.tcMonth||monthOf(sel),first=pd(mo+"-01"),y=first.getFullYear(),m=first.getMonth(),n=new Date(y,m+1,0).getDate(),lead=(first.getDay()+6)%7,t=todayS();
+  var ev={};st.mocks.forEach(function(x){ev[x.date]="模"});st.pastItems.forEach(function(x){if(x.date&&!ev[x.date])ev[x.date]="過"});st.exams.forEach(function(x){ev[x.date]="受"});
+  var h='<div class="card" style="padding:10px 12px"><div class="row between"><button class="sq" data-act="tcM" data-v="-1" aria-label="前の月" style="width:40px;height:36px">‹</button><b>'+y+'年'+(m+1)+'月</b><button class="sq" data-act="tcM" data-v="1" aria-label="次の月" style="width:40px;height:36px">›</button></div>'+
+    '<div class="tcal">'+"月火水木金土日".split("").map(function(w,i){return'<span class="hd" style="'+(i===5?"color:var(--accent)":(i===6?"color:var(--bad)":""))+'">'+w+'</span>'}).join("");
+  for(var i=0;i<lead;i++)h+='<span></span>';
+  for(var dd=1;dd<=n;dd++){var d=mo+"-"+pad(dd),w=dow(d),on=d===sel,off=!isStudy(st,d),rec=st.materials.some(function(mm){return getRec(d,mm.id)});
+    var col=on?"":(st.holidays[d]||w===0?"color:var(--bad)":(w===6?"color:var(--accent)":""));
+    h+='<button class="tc'+(on?" on":"")+(d===t?" td":"")+(off&&!on?" off":"")+'" data-act="gotoDay" data-v="'+d+'" aria-label="'+fmtY(d)+'" aria-pressed="'+on+'" style="'+col+'"><span>'+dd+'</span>'+
+      (ev[d]?'<i class="mk">'+ev[d]+'</i>':(rec?'<i class="rd"></i>':''))+'</button>'}
+  return h+'</div><div class="small muted" style="margin-top:4px">●記録あり　受：受験日　模：模試　過：過去問　薄い日：学習日以外</div></div>';
+}
+
 /* --- 試験日程 --- */
 function viewExams(st){
   var t=todayS();
@@ -690,7 +714,7 @@ function viewExams(st){
   var past='<div class="card"><div class="row between"><span class="h2">過去問（科目別）</span><div class="row"><span class="small muted">1日の上限 '+st.pastLimit+'回</span><button class="btn sm dash" data-act="pastSet">＋ 追加</button><button class="btn sm pri" data-act="autoPlace"'+(st.pastSets.length?"":" disabled")+'>自動配置</button></div></div>'+
     (st.pastSets.length?'<div class="tbl-wrap"><table class="tbl" style="margin-top:6px"><thead><tr><th>科目</th><th>対象受験</th><th>回数</th><th>所要</th><th>復習</th><th>配置期間</th><th>配置／実施</th></tr></thead><tbody>'+st.pastSets.map(function(p){
       var sj=subjById(st,p.subjectId),ex=examById(st,p.examId),its=st.pastItems.filter(function(i){return i.setId===p.id}),dn=its.filter(function(i){return i.date&&getCheck(i.date,"past:"+i.id)}).length;
-      var s=p.start||(ex?addD(ex.date,-90):""),e=p.end||(ex?addD(ex.date,-1):"");
+      var s=p.start||(ex?addD(ex.date,-PAST_START):""),e=p.end||(ex?addD(ex.date,-PAST_END):"");
       return'<tr><td><button class="btn sm" data-act="pastSet" data-id="'+p.id+'"><i class="dot" style="background:'+esc(sj?sj.color:"#888")+'"></i>&nbsp;'+esc(sj?sj.name:"（削除済）")+'</button></td><td>'+esc(ex?ex.name:"—")+'</td><td><b>'+num(p.count,0)+'回</b></td><td>'+num(p.min,50)+'分</td><td>'+num(p.reviewMin,30)+'分</td><td class="small">'+fmt(s)+'〜'+fmt(e)+'</td><td class="small">'+its.filter(function(i){return i.date}).length+'／'+dn+'</td></tr>'}).join("")+'</tbody></table></div>':'<p class="small muted">科目ごとに過去問の回数を設定し、「自動配置」を押すと、実施日と復習日を期間内に分散して割り当てます。</p>')+'</div>';
   return'<div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr))"><div class="stack">'+exams+mocks+'</div><div class="stack">'+past+examCal(st)+'</div></div>';
 }
@@ -813,7 +837,7 @@ function dlgPastSet(st,id){
     '<label class="f">対象受験<select class="in" id="x-exam">'+st.exams.map(function(e){return'<option value="'+e.id+'"'+(e.id===p.examId?" selected":"")+'>'+esc(e.name)+'</option>'}).join("")+'</select></label>'+
     '<label class="f">実施回数<input class="in" type="number" inputmode="numeric" min="1" max="30" id="x-count" value="'+esc(p.count)+'"></label><label class="f">1回の所要時間（分）<input class="in" type="number" inputmode="numeric" id="x-min" value="'+esc(p.min)+'"></label>'+
     '<label class="f">復習所要時間（分）<input class="in" type="number" inputmode="numeric" id="x-rmin" value="'+esc(p.reviewMin)+'"></label><span></span>'+
-    '<label class="f">配置期間の開始（空欄＝受験日の90日前）<input class="in" type="date" id="x-start" value="'+esc(p.start||"")+'"></label><label class="f">配置期間の終了（空欄＝受験日の前日）<input class="in" type="date" id="x-end" value="'+esc(p.end||"")+'"></label></div>'+
+    '<label class="f">配置期間の開始（空欄＝受験日の60日前）<input class="in" type="date" id="x-start" value="'+esc(p.start||"")+'"></label><label class="f">配置期間の終了（空欄＝受験日の3日前）<input class="in" type="date" id="x-end" value="'+esc(p.end||"")+'"></label></div>'+
     '<p class="small muted" style="margin:0">保存後、「自動配置」を押すと実施日と復習日が割り当てられます。</p><div class="acts">'+(id?'<button class="btn danger" data-act="mDel">削除</button>':'')+'<button class="btn" data-act="close">取消し</button><button class="btn pri" data-act="mSave">保存</button></div>');
 }
 function dlgPastItem(st,id){
@@ -890,10 +914,10 @@ function splitEven(st,m){
   return true;
 }
 var A={
-  tab:function(el){S.tab=el.dataset.v;lsSet("gp-tab",S.tab);if(S.tab==="today")S.date=todayS();render();document.getElementById("main")&&(document.getElementById("main").scrollTop=0)},
+  tab:function(el){S.tab=el.dataset.v;lsSet("gp-tab",S.tab);if(S.tab==="today"){S.date=todayS();S.tcMonth=monthOf(S.date)}render();document.getElementById("main")&&(document.getElementById("main").scrollTop=0)},
   view:function(el){S.view=el.dataset.v;S.ganttScroll=null;render();A.toToday()},
   toToday:function(){var g=document.getElementById("gscroll"),st=stu();if(!g||!st)return;var R=ganttRange(st);g.scrollLeft=Math.max(0,diffD(R.lo,todayS())*CW[S.view]-120)},
-  day:function(el){var v=+el.dataset.v;S.date=v===0?todayS():addD(S.date,v);render()},
+  day:function(el){var v=+el.dataset.v;S.date=v===0?todayS():addD(S.date,v);S.tcMonth=monthOf(S.date);render()},
   avail:function(el){var st=stu(),d=S.date,cur=availMin(st,d);if(st.holidays[d]||isMockDay(st,d)){toast("休止日・模試日は学習時間を設定できません。");return}st.overrides[d]=Math.max(0,cur+(+el.dataset.v));save(st)},
   availReset:function(){var st=stu();delete st.overrides[S.date];save(st)},
   check:function(el){var st=stu(),k=el.dataset.k,d=S.date;Store.patchLog(st.id,d,"checks",d+"|"+k,!getCheck(d,k));render()},
@@ -901,6 +925,9 @@ var A={
     if(rec){Store.patchLog(st.id,d,"recs",d+"|"+m.id,null);render();return}
     var P=dayPlan(st,d),x=null;P.subs.forEach(function(s){s.items.forEach(function(i){if(i.m.id===m.id)x=i})});
     if(!x||!x.plan||!x.pages)return;Store.patchLog(st.id,d,"recs",d+"|"+m.id,{round:x.plan.round,from:x.from,to:x.to,pages:x.pages});render()},
+  hdrDay:function(el,ev){var st=stu(),R=ganttRange(st),rect=el.getBoundingClientRect(),i=Math.floor((ev.clientX-rect.left)/CW[S.view]);A.gotoDay(addD(R.lo,Math.max(0,Math.min(R.n-1,i))))},
+  gotoDay:function(d){S.date=typeof d==="string"?d:d.dataset.v;S.tcMonth=monthOf(S.date);S.tab="today";lsSet("gp-tab","today");render();var mn=document.getElementById("main");if(mn)mn.scrollTop=0},
+  tcM:function(el){var d=pd((S.tcMonth||monthOf(S.date))+"-01");d.setMonth(d.getMonth()+(+el.dataset.v));S.tcMonth=ds(d).slice(0,7);render()},
   cell:function(el,ev){var st=stu(),R=ganttRange(st),rect=el.getBoundingClientRect(),i=Math.floor((ev.clientX-rect.left)/CW[S.view]);dlgCell(st,el.dataset.id,addD(R.lo,Math.max(0,i)))},
   editMat:function(el){var st=stu(),m=st.materials.find(function(x){return x.id===el.dataset.id});if(!m)return;S.matSel=m.id;S.draft=clone(m);S.tab="mats";lsSet("gp-tab","mats");render()},
   newMat:function(){var st=stu();if(!st.subjects.length){toast("先に設定画面で科目を追加してください。");return}S.matSel=null;S.draft=newDraft(st);render()},
@@ -943,7 +970,7 @@ var A={
     S.dl.save({filename:"学習プランナー_"+st.name+"_"+todayS()+".json",data:JSON.stringify(data,null,1)}).then(function(){st.lastExport=todayS();save(st);toast("書き出しました。")}).catch(function(e){if(e&&e.code!=="declined")toast("書き出せませんでした。")})},
   import:function(){document.getElementById("importFile").click()},
   print:function(){printFile()},
-  loadSample:function(){var o=SAMPLE;if(!S.students[o.student.id]){var st=clone(o.student);normalize(st);Store.saveStudent(st);Object.keys(o.logs).forEach(function(mo){Store.putMonth(st.id,mo,clone(o.logs[mo]))})}
+  loadSample:function(){var o=SAMPLE;if(!S.students[o.student.id]){var st=clone(o.student);normalize(st);resetMemo();autoPlace(st);resetMemo();Store.saveStudent(st);Object.keys(o.logs).forEach(function(mo){Store.putMonth(st.id,mo,clone(o.logs[mo]))})}
     S.sid=o.student.id;lsSet("gp-sid",S.sid);S.tab="gantt";render();toast("サンプルデータを読み込みました。設定画面から削除できます。")},
   close:function(){closeModal()},maskClose:function(el,ev){if(ev.target===el)closeModal()},
   mSave:function(){modalSave()},mDel:function(){modalDelete()},mOk:function(){M&&M.ok&&M.ok()}
