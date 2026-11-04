@@ -1,4 +1,3 @@
-javascript
 window.FIREBASE_CONFIG = {
   apiKey: "AIzaSyBVLnoEWsqUiTdMBOH_BVHXSXqA6omaelI",
   authDomain: "studyplanner-6af1e.firebaseapp.com",
