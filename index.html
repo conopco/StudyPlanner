@@ -13,6 +13,10 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px)}html,body{margin:0}</style>
+<script src="config.js"></script>
+<script src="lib/firebase-app-compat.js"></script>
+<script src="lib/firebase-auth-compat.js"></script>
+<script src="lib/firebase-firestore-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@700&display=swap">
 <style>
@@ -239,8 +243,32 @@ var IDB={db:null,
 var Store={db:null,unsubS:null,unsubL:null,
   init:function(){
     S.dl={save:function(o){return new Promise(function(res,rej){try{var b=new Blob([o.data],{type:/\.json$/.test(o.filename)?"application/json":"text/plain"});var u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=o.filename.replace(/[\\/:*?"<>|\s（）()]+/g,"_");document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(u);a.remove()},1500);res()}catch(e){rej({code:"unavailable"})}})}};
-    this.local();
+    var cfg=window.FIREBASE_CONFIG;
+    if(!cfg||!cfg.apiKey){this.local();return}
+    if(!window.firebase){S.mode="nolib";render();return}
+    var self=this;
+    try{firebase.initializeApp(cfg);self.fs=firebase.firestore();self.fs.enablePersistence({synchronizeTabs:true}).catch(function(){});self.auth=firebase.auth()}
+    catch(e){S.mode="nolib";render();return}
+    S.cloud=true;
+    self.auth.onAuthStateChanged(function(u){
+      self.teardown();S.students={};S.logs={};
+      if(!u){S.user=null;S.mode="login";render();return}
+      S.user={uid:u.uid,email:u.email};
+      var root=self.fs.collection("users").doc(u.uid);
+      self.db={collection:function(n){return root.collection(n)}};
+      S.mode="loading";
+      self.unsubS=self.db.collection("students").onSnapshot(function(snap){
+        var m={};snap.docs.forEach(function(d){if(d.exists){var x=clone(d.data());normalize(x);m[d.id]=x}});
+        S.students=m;if(!S.students[S.sid])S.sid=orderedIds()[0]||null;
+        S.mode="db";self.watchLogs();render();
+      },function(e){self.fail(e)});
+      IDB.open().then(function(){return IDB.get("data")}).then(function(o){
+        if(!o){try{var raw=lsGet("gp-local");if(raw)o=JSON.parse(raw)}catch(e){}}
+        S.localData=o&&o.students&&Object.keys(o.students).length?o:null;if(S.mode==="db")render();
+      });
+    });
   },
+  teardown:function(){if(this.unsubS)this.unsubS();if(this.unsubL)this.unsubL();this.unsubS=this.unsubL=null;this.watching=null;this.db=null},
   local:function(){
     S.mode="loading";
     try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
@@ -253,7 +281,7 @@ var Store={db:null,unsubS:null,unsubL:null,
     });
   },
   persistLocal:function(){var self=this;clearTimeout(self.t);self.t=setTimeout(function(){var o={students:S.students,logs:S.logs};IDB.put("data",o);lsSet("gp-local",JSON.stringify(o))},250)},
-  fail:function(e){toast("保存先に接続できません（"+(e&&e.code||"unavailable")+"）。再読み込みしてください。")},
+  fail:function(e){toast(e&&e.code==="permission-denied"?"データを読み込む権限がありません。Firestoreのセキュリティルールを確認してください。":"サーバーに接続できません（"+(e&&e.code||"unavailable")+"）。再読み込みしてください。")},
   watchLogs:function(){
     var self=this;if(!self.db)return;
     if(self.watching===S.sid)return;
@@ -283,9 +311,8 @@ var Store={db:null,unsubS:null,unsubL:null,
     L[field][key]=val;
     if(this.db){
       var ref=this.db.collection("logs").doc(sid+"_"+mo);
-      var p={};p[field]={};p[field][key]=val;
-      var w=exists?ref.update(p):ref.set({sid:sid,month:mo,recs:clone(L.recs),checks:clone(L.checks)});
-      w.catch(function(e){ if(exists&&e&&e.code==="invalid_argument"){ref.set({sid:sid,month:mo,recs:clone(L.recs),checks:clone(L.checks)}).catch(function(e2){Store.writeErr(e2)})} else Store.writeErr(e)});
+      var p={sid:sid,month:mo};p[field]={};p[field][key]=val;
+      ref.set(p,{merge:true}).catch(function(e){Store.writeErr(e)});
     } else this.persistLocal();
   },
   putMonth:function(sid,mo,L){
@@ -293,7 +320,7 @@ var Store={db:null,unsubS:null,unsubL:null,
     if(this.db)this.db.collection("logs").doc(sid+"_"+mo).set({sid:sid,month:mo,recs:L.recs||{},checks:L.checks||{}}).catch(function(e){Store.writeErr(e)});
     else this.persistLocal();
   },
-  writeErr:function(e){var c=e&&e.code;toast(c==="quota_exceeded"?"保存容量の上限に達しました。古い生徒データを削除してください。":"保存に失敗しました。通信状態を確認して、もう一度操作してください。")}
+  writeErr:function(e){var c=e&&e.code;toast(c==="permission-denied"?"保存する権限がありません。ログインし直してください。":c==="resource-exhausted"||c==="quota_exceeded"?"保存容量又は利用量の上限に達しました。":"保存に失敗しました。通信状態を確認して、もう一度操作してください。")}
 };
 function orderedIds(){return Object.keys(S.students).sort(function(a,b){var x=S.students[a],y=S.students[b];return(x.created||"")<(y.created||"")?-1:1})}
 function normalize(st){
@@ -539,7 +566,9 @@ function render(){
   resetMemo();
   var g=document.querySelector(".g-scroll");if(g)S.ganttScroll={l:g.scrollLeft,t:g.scrollTop,view:S.view,sid:S.sid};
   var st=stu();
-  if(S.mode==="loading"){return}
+  if(S.mode==="loading"){if(!app.querySelector(".head"))app.innerHTML='<div class="empty"><h2>学習プランナー</h2><p>読み込み中です。</p></div>';return}
+  if(S.mode==="login"){app.innerHTML=loginView();if(S.toast)app.insertAdjacentHTML("beforeend",'<div class="toast" role="status">'+esc(S.toast)+'</div>');return}
+  if(S.mode==="nolib"){app.innerHTML='<div class="empty"><h2>サーバーに接続できません</h2><p>初回の起動時は、インターネットに接続した状態で開いてください。<br>接続後、この画面を再読み込みしてください。</p></div>';return}
   var html=head(st)+'<main class="main" id="main">'+(st?body(st):noStudent())+'</main>'+nav();
   app.innerHTML=html;
   if(S.toast)app.insertAdjacentHTML("beforeend",'<div class="toast" role="status">'+esc(S.toast)+'</div>');
@@ -559,7 +588,9 @@ function nav(){
 }
 function noStudent(){
   return'<div class="empty"><h2>生徒を登録してください</h2><p>生徒を登録すると、国語・数学・英語・理科・社会の5科目が初期設定されます。</p><p><button class="btn pri" data-act="addStudent">生徒を追加</button></p>'+
-    '<p><button class="btn" data-act="loadSample">サンプルデータで試す</button>　<a class="btn" href="manual.html" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)">マニュアル</a></p><p class="small">データはこの端末のブラウザ内に保存されます。設定画面から定期的に書き出してください。</p></div>';
+    '<p><button class="btn" data-act="loadSample">サンプルデータで試す</button>　<a class="btn" href="manual.html" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)">マニュアル</a></p><p class="small">'+(S.mode==="db"?"データはアカウント（"+esc(S.user.email)+"）に保存されます。":"データはこの端末のブラウザ内に保存されます。設定画面から定期的に書き出してください。")+'</p>'+
+    (S.mode==="db"&&S.localData?'<p><button class="btn pri" data-act="migrate">この端末のデータをアカウントへ移す</button></p>':'')+
+    (S.mode==="db"?'<p><button class="btn sm" data-act="logout">ログアウト</button></p>':'')+'</div>';
 }
 function body(st){
   var b=backupNote(st);
@@ -570,9 +601,29 @@ function body(st){
   return b+viewGantt(st);
 }
 function backupNote(st){
-  var le=st.lastExport;if(!st.materials.length||(le&&diffD(le,todayS())<7))return"";
+  if(S.mode==="db")return"";var le=st.lastExport;if(!st.materials.length||(le&&diffD(le,todayS())<7))return"";
   return'<div class="note row between no-print" style="margin-bottom:12px"><span style="flex:1;min-width:0">'+(le?"最後の書出し（"+fmtY(le)+"）から7日以上経過しています。":"まだ書出しをしていません。")+'データはこの端末のブラウザ内にのみ保存されています。</span><button class="btn sm" data-act="export">今すぐ書き出す</button></div>';
 }
+
+function loginView(){
+  return'<div class="main"><div class="card stack" style="max-width:440px;margin:6vh auto 0"><span class="brand" style="font-size:24px">学習プランナー</span>'+
+    '<form id="loginForm" class="stack" novalidate><label class="f">メールアドレス<input class="in" id="lg-email" type="email" autocomplete="username" inputmode="email" required></label>'+
+    '<label class="f">パスワード（6文字以上）<input class="in" id="lg-pw" type="password" autocomplete="current-password" required minlength="6"></label>'+
+    '<div class="row"><button class="btn pri" type="submit">ログイン</button><button class="btn" type="button" data-act="signup">新規登録</button><button class="btn" type="button" data-act="resetPw">パスワードを忘れた</button></div>'+
+    '<div id="lg-msg" class="small" role="alert" style="min-height:1.5em;color:var(--bad)"></div></form>'+
+    '<p class="small muted" style="margin:0">ログインすると、計画と記録はFirebase（Google）のサーバーに保存され、同じアカウントでログインした他の端末からも使えます。</p></div></div>';
+}
+function authMsg(e){var c=e&&e.code||"";
+  var m={"auth/invalid-credential":"メールアドレス又はパスワードが正しくありません。","auth/wrong-password":"メールアドレス又はパスワードが正しくありません。","auth/user-not-found":"メールアドレス又はパスワードが正しくありません。",
+    "auth/invalid-login-credentials":"メールアドレス又はパスワードが正しくありません。","auth/email-already-in-use":"このメールアドレスは登録済みです。「ログイン」を押してください。","auth/weak-password":"パスワードは6文字以上にしてください。",
+    "auth/invalid-email":"メールアドレスの形式が正しくありません。","auth/missing-password":"パスワードを入力してください。","auth/too-many-requests":"試行回数が多すぎます。しばらく待ってから、もう一度お試しください。",
+    "auth/network-request-failed":"通信できません。インターネットへの接続を確認してください。","auth/operation-not-allowed":"Firebaseで「メール/パスワード」のログインが有効になっていません。"};
+  return m[c]||"処理できませんでした（"+c+"）。";}
+function lgMsg(t,ok){var el=document.getElementById("lg-msg");if(el){el.textContent=t;el.style.color=ok?"var(--good)":"var(--bad)"}}
+function lgVals(){return{e:(document.getElementById("lg-email")||{}).value||"",p:(document.getElementById("lg-pw")||{}).value||""}}
+document.addEventListener("submit",function(ev){if(ev.target.id!=="loginForm")return;ev.preventDefault();var v=lgVals();
+  if(!v.e||!v.p){lgMsg("メールアドレスとパスワードを入力してください。");return}lgMsg("ログインしています…",true);
+  Store.auth.signInWithEmailAndPassword(v.e.trim(),v.p).catch(function(e){lgMsg(authMsg(e))})});
 
 /* --- ガントチャート --- */
 var CW={day:28,week:10,month:4};
@@ -805,7 +856,11 @@ function viewSettings(st){
   hol+='</div><div class="small muted" style="margin-top:6px">登録済みの休止日：'+cnt+'日</div></div>';
   var bk='<div class="card"><span class="h2">バックアップ</span><p class="small muted" style="margin:6px 0 10px">この生徒の設定と記録をJSONファイルに書き出し、又は読み込みます。'+(st.lastExport?"最終書出し："+fmtY(st.lastExport):"まだ書き出していません。")+'</p><div class="row">'+
     (S.dl?'<button class="btn dark" data-act="export">書出し</button>':'<span class="small muted">この表示ではファイルを保存できません。</span>')+'<button class="btn" data-act="import">読込み</button></div></div>';
-  return'<div class="grid2"><div class="stack">'+studs+gen+subs+'</div><div class="stack">'+wk+hol+bk+'<div class="card"><span class="h2">使い方</span><p class="small muted" style="margin:6px 0 10px">操作手順と計算の仕組みを説明しています。</p><a class="btn" href="manual.html" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)">マニュアルを開く</a></div></div></div>';
+  var acct=S.mode==="db"?'<div class="card stack"><span class="h2">アカウント</span><div class="small">ログイン中：<b>'+esc(S.user.email)+'</b></div><div class="small muted">計画と記録はサーバーに保存され、同じアカウントでログインした端末どうしで同期します。通信できない間の変更は、接続したときに送信されます。</div>'+
+    (S.localData?'<div class="note">この端末に、ログイン前に保存したデータ（生徒'+Object.keys(S.localData.students).length+'名分）があります。<div style="margin-top:8px"><button class="btn sm pri" data-act="migrate">アカウントへ移す</button></div></div>':'')+
+    '<div><button class="btn" data-act="logout">ログアウト</button></div></div>':
+    (S.cloud?"":'<div class="card"><span class="h2">アカウント</span><p class="small muted" style="margin:6px 0 0">サーバー保存は設定されていません。データはこの端末のブラウザ内にのみ保存されます。サーバーに保存するには、config.js にFirebaseの設定を記入してください（同梱の手順書を参照）。</p></div>');
+  return'<div class="grid2"><div class="stack">'+acct+studs+gen+subs+'</div><div class="stack">'+wk+hol+bk+'<div class="card"><span class="h2">使い方</span><p class="small muted" style="margin:6px 0 10px">操作手順と計算の仕組みを説明しています。</p><a class="btn" href="manual.html" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)">マニュアルを開く</a></div></div></div>';
 }
 
 /* ========== モーダル ========== */
@@ -970,6 +1025,15 @@ var A={
     S.dl.save({filename:"学習プランナー_"+st.name+"_"+todayS()+".json",data:JSON.stringify(data,null,1)}).then(function(){st.lastExport=todayS();save(st);toast("書き出しました。")}).catch(function(e){if(e&&e.code!=="declined")toast("書き出せませんでした。")})},
   import:function(){document.getElementById("importFile").click()},
   print:function(){printFile()},
+  signup:function(){var v=lgVals();if(!v.e||v.p.length<6){lgMsg("メールアドレスと、6文字以上のパスワードを入力してください。");return}lgMsg("登録しています…",true);
+    Store.auth.createUserWithEmailAndPassword(v.e.trim(),v.p).catch(function(e){lgMsg(authMsg(e))})},
+  resetPw:function(){var v=lgVals();if(!v.e){lgMsg("メールアドレスを入力してから押してください。");return}
+    Store.auth.sendPasswordResetEmail(v.e.trim()).then(function(){lgMsg("パスワード再設定用のメールを送信しました。メールの案内に従ってください。",true)}).catch(function(e){lgMsg(authMsg(e))})},
+  logout:function(){confirmBox("ログアウトします。この端末で再び使うには、もう一度ログインしてください。","ログアウト",function(){closeModal();Store.auth.signOut()})},
+  migrate:function(){var o=S.localData;if(!o)return;var ids=Object.keys(o.students),n=ids.length;
+    confirmBox("この端末に保存されている生徒"+n+"名分のデータを、アカウントへ移します。同じ生徒がアカウントに既にある場合は、端末の内容で上書きします。","移す",function(){
+      ids.forEach(function(id){var st=clone(o.students[id]);normalize(st);Store.saveStudent(st);var L=(o.logs||{})[id]||{};Object.keys(L).forEach(function(mo){Store.putMonth(id,mo,clone(L[mo]))})});
+      IDB.put("data_migrated",o);IDB.put("data",{students:{},logs:{}});lsSet("gp-local","");S.localData=null;closeModal();Store.watching=null;Store.watchLogs();render();toast("生徒"+n+"名分のデータをアカウントへ移しました。")})},
   loadSample:function(){var o=SAMPLE;if(!S.students[o.student.id]){var st=clone(o.student);normalize(st);resetMemo();autoPlace(st);resetMemo();Store.saveStudent(st);Object.keys(o.logs).forEach(function(mo){Store.putMonth(st.id,mo,clone(o.logs[mo]))})}
     S.sid=o.student.id;lsSet("gp-sid",S.sid);S.tab="gantt";render();toast("サンプルデータを読み込みました。設定画面から削除できます。")},
   close:function(){closeModal()},maskClose:function(el,ev){if(ev.target===el)closeModal()},
