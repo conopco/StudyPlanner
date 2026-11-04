@@ -1,6 +1,6 @@
 /* 学習プランナー：オフライン動作用 Service Worker */
-const CACHE = "study-planner-v4";
-const ASSETS = ["./", "./index.html", "./manual.html", "./config.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png",
+const CACHE = "study-planner-v5";
+const ASSETS = ["./", "./index.html", "./manual.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png",
   "./lib/firebase-app-compat.js", "./lib/firebase-auth-compat.js", "./lib/firebase-firestore-compat.js"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS))); self.skipWaiting(); });
